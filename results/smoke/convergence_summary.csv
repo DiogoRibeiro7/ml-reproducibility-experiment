@@ -1,0 +1,15 @@
+experiment,model,preprocessing,n_runs,n_converged,convergence_rate,max_n_iter,total_convergence_warnings
+factorial,sgd_logistic,none,4,4,1,86,0
+factorial,sgd_logistic,standard,4,4,1,57,0
+preprocessing_sensitivity,logistic,none,1,1,1,9,0
+preprocessing_sensitivity,logistic,standard,1,1,1,7,0
+preprocessing_sensitivity,random_forest,none,1,1,1,-1,0
+preprocessing_sensitivity,random_forest,standard,1,1,1,-1,0
+preprocessing_sensitivity,sgd_logistic,none,1,1,1,59,0
+preprocessing_sensitivity,sgd_logistic,standard,1,1,1,40,0
+seed_sensitivity,logistic,standard,3,3,1,7,0
+seed_sensitivity,random_forest,standard,3,3,1,-1,0
+seed_sensitivity,sgd_logistic,standard,3,3,1,47,0
+split_sensitivity,logistic,standard,3,3,1,7,0
+split_sensitivity,random_forest,standard,3,3,1,-1,0
+split_sensitivity,sgd_logistic,standard,3,3,1,40,0

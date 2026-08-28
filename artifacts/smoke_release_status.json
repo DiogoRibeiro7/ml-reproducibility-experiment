@@ -1,0 +1,68 @@
+{
+  "checks": [
+    {
+      "detail": "prospective design lock verified",
+      "name": "design_lock",
+      "passed": true
+    },
+    {
+      "detail": "canonical runtime verified",
+      "name": "reference_environment",
+      "passed": true
+    },
+    {
+      "detail": "dataset provenance verified",
+      "name": "dataset",
+      "passed": true
+    },
+    {
+      "detail": "exact run grid and manifest verified",
+      "name": "raw_split_sensitivity",
+      "passed": true
+    },
+    {
+      "detail": "exact run grid and manifest verified",
+      "name": "raw_seed_sensitivity",
+      "passed": true
+    },
+    {
+      "detail": "exact run grid and manifest verified",
+      "name": "raw_preprocessing_sensitivity",
+      "passed": true
+    },
+    {
+      "detail": "exact run grid and manifest verified",
+      "name": "raw_factorial",
+      "passed": true
+    },
+    {
+      "detail": "all raw families agree",
+      "name": "environment_consistency",
+      "passed": true
+    },
+    {
+      "detail": "verified",
+      "name": "baseline_consistency",
+      "passed": true
+    },
+    {
+      "detail": "verified",
+      "name": "deterministic_controls",
+      "passed": true
+    },
+    {
+      "detail": "verified",
+      "name": "derived_tables",
+      "passed": true
+    },
+    {
+      "detail": "verified",
+      "name": "full_empirical_replay",
+      "passed": true
+    }
+  ],
+  "config": "configs/smoke.yml",
+  "dataset": "breast_cancer",
+  "release_authorised": true,
+  "schema": 2
+}

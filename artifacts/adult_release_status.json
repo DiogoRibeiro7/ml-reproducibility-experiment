@@ -1,0 +1,48 @@
+{
+  "checks": [
+    {
+      "detail": "prospective design lock verified",
+      "name": "design_lock",
+      "passed": true
+    },
+    {
+      "detail": "canonical runtime verified",
+      "name": "reference_environment",
+      "passed": true
+    },
+    {
+      "detail": "Missing external prospective anchor: /mnt/data/ml-reproducibility-experiment-v0.4.0/artifacts/adult_external_anchor.json. Publish the preregistration capsule before retrieving Adult data.",
+      "name": "external_anchor",
+      "passed": false
+    },
+    {
+      "detail": "Adult dataset receipt cannot be verified without the external anchor",
+      "name": "dataset",
+      "passed": false
+    },
+    {
+      "detail": "Missing result family or manifest: split_sensitivity",
+      "name": "raw_split_sensitivity",
+      "passed": false
+    },
+    {
+      "detail": "Missing result family or manifest: seed_sensitivity",
+      "name": "raw_seed_sensitivity",
+      "passed": false
+    },
+    {
+      "detail": "Missing result family or manifest: preprocessing_sensitivity",
+      "name": "raw_preprocessing_sensitivity",
+      "passed": false
+    },
+    {
+      "detail": "Missing result family or manifest: factorial",
+      "name": "raw_factorial",
+      "passed": false
+    }
+  ],
+  "config": "configs/adult.yml",
+  "dataset": "adult",
+  "release_authorised": false,
+  "schema": 2
+}

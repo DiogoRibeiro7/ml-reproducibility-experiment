@@ -1,0 +1,7 @@
+experiment,model,n_nonreference,unique_prediction_vectors_all_runs,unique_score_vectors_all_runs,exact_prediction_reference_match_rate,exact_score_reference_match_rate
+seed_sensitivity,logistic,2,1,1,1,1
+seed_sensitivity,random_forest,2,2,3,0.5,0
+seed_sensitivity,sgd_logistic,2,3,3,0,0
+preprocessing_sensitivity,logistic,1,2,2,0,0
+preprocessing_sensitivity,random_forest,1,1,2,1,0
+preprocessing_sensitivity,sgd_logistic,1,2,2,0,0

@@ -1,0 +1,29 @@
+dataset: adult
+output_dir: results/adult
+figure_dir: figures/adult
+test_size: 0.25
+baseline_split_seed: 1729
+baseline_model_seed: 2718
+split_repetitions: 30
+seed_repetitions: 30
+factorial_split_repetitions: 8
+factorial_seed_repetitions: 8
+factorial_models:
+- sgd_logistic
+- random_forest
+models:
+- logistic
+- linear_svm
+- random_forest
+- sgd_logistic
+preprocessing:
+- standard
+- robust
+- none
+primary_metric: roc_auc
+reproducibility_tolerances:
+- 0.001
+- 0.005
+- 0.01
+n_jobs: 1
+numeric_threads: 1

@@ -1,0 +1,26 @@
+dataset: breast_cancer
+output_dir: results/smoke
+figure_dir: figures/smoke
+test_size: 0.25
+baseline_split_seed: 1729
+baseline_model_seed: 2718
+split_repetitions: 3
+seed_repetitions: 3
+factorial_split_repetitions: 2
+factorial_seed_repetitions: 2
+factorial_models:
+- sgd_logistic
+models:
+- logistic
+- random_forest
+- sgd_logistic
+preprocessing:
+- standard
+- none
+primary_metric: roc_auc
+reproducibility_tolerances:
+- 0.001
+- 0.005
+- 0.01
+n_jobs: 1
+numeric_threads: 1

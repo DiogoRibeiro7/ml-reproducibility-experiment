@@ -1,0 +1,59 @@
+[tool.poetry]
+name = "ml-reproducibility-experiment"
+version = "0.4.0"
+description = "A prospectively locked classical-ML study of split, seed, procedure and behavioural reproducibility."
+authors = ["Diogo Ribeiro"]
+readme = "README.md"
+packages = [{ include = "ml_reproducibility", from = "src" }]
+
+[tool.poetry.dependencies]
+python = "3.13.5"
+numpy = "2.3.5"
+pandas = "2.2.3"
+scipy = "1.17.0"
+scikit-learn = "1.8.0"
+statsmodels = "0.14.6"
+matplotlib = "3.10.8"
+pyyaml = "6.0.3"
+joblib = "1.5.3"
+threadpoolctl = "3.6.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "9.0.2"
+ruff = "0.12.12"
+mypy = "1.17.1"
+pandas-stubs = "2.2.3.250527"
+
+[tool.poetry.scripts]
+ml-repro = "ml_reproducibility.cli:main"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+addopts = "-q"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "N", "ANN", "S"]
+ignore = ["ANN401"]
+
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["S101"]
+"tests/*.py" = ["S101"]
+"src/ml_reproducibility/data.py" = ["N803", "N806", "N815"]
+"src/ml_reproducibility/experiment.py" = ["N806"]
+"src/ml_reproducibility/metrics.py" = ["N803"]
+"src/ml_reproducibility/preprocessing.py" = ["N803"]
+
+[tool.mypy]
+python_version = "3.13"
+strict = true
+warn_unused_configs = true
+packages = ["ml_reproducibility"]

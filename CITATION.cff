@@ -1,0 +1,20 @@
+cff-version: 1.2.0
+title: "ML Reproducibility Experiment"
+message: "Please cite this software and the UCI Adult dataset when using the experiment."
+type: software
+authors:
+  - family-names: Ribeiro
+    given-names: Diogo
+version: 0.4.0
+date-released: 2026-08-26
+license: MIT
+references:
+  - type: dataset
+    title: Adult
+    authors:
+      - family-names: Becker
+        given-names: Barry
+      - family-names: Kohavi
+        given-names: Ronny
+    year: 1996
+    doi: 10.24432/C5XW20

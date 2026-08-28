@@ -1,0 +1,6 @@
+{
+  "python_version": "3.13.5",
+  "n_jobs": 1,
+  "numeric_threads": 1,
+  "policy": "Canonical primary execution uses one estimator job and threadpoolctl-enforced single-thread numerical kernels."
+}

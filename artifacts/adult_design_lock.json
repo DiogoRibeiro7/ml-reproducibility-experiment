@@ -1,0 +1,26 @@
+{
+  "config": "configs/adult.yml",
+  "dataset": "adult",
+  "files_sha256": {
+    "configs/adult.yml": "58d503ab24dd312195fad66ca018f3c7eab4227e5d26f3380fa6ebdfe08fd78e",
+    "docs/PROTOCOL.md": "7f7aec31bd829a1bc1d14287b0faf53385e8afcd9c2d4d78a3f13df20248f8b4",
+    "docs/STUDY_DESIGN.md": "7f4a8552e1c91050fc2ff0e6aa71d9ef4e6089ced701a2b84b97c5df1aa7b699",
+    "environment/requirements.lock.txt": "c29a011ce4b4033cd52fc927e8430e6114960a71c172c5dcca5e990dc5c1dcee",
+    "environment/runtime-policy.json": "ad8d9fbc5bc1a4fb39c47c0fcd9249585d4983d5323a45a8f9aaf67af9263e68",
+    "pyproject.toml": "603ab3339c3367ff6c2d7c94fb702d551b7725a42283cf80f27a3ab949b747ef",
+    "src/ml_reproducibility/__init__.py": "416ed324bf27ee174d41e95f56c9d4680670df6f05b1ee5c7574bf36572b0486",
+    "src/ml_reproducibility/analysis.py": "9171c58e54fcd473f737991dca2ad5574e305647b9b59014794359ca1fba24a6",
+    "src/ml_reproducibility/anchor.py": "a2652fbf78906142d5fc468d29d181979452c4a3a478eef6a909322662c02adb",
+    "src/ml_reproducibility/cli.py": "fb111f292008b02fe89dfbc77b9c2356edeb387289579206241b41e6b0ff20ef",
+    "src/ml_reproducibility/config.py": "130048969aafd106fdbf59b89cf9c68754aaf52c6f53985059646fe96b0b0383",
+    "src/ml_reproducibility/data.py": "ba45bf3315a455556f50d4beee5d821872ac638a66cf462d5c8c58920979bff6",
+    "src/ml_reproducibility/design.py": "7805bfef52dff01f4f305443f3d403a0c0d8955c1e9193c17505fd924edec8e6",
+    "src/ml_reproducibility/experiment.py": "18131fb27ec24ae92d18da9055edb7d46ecd077b95c34f215aa78b15f0cb0b0b",
+    "src/ml_reproducibility/metrics.py": "d9c576bb39772026b429050794d9958e30c5d5c53d37f3508759c93babda6de7",
+    "src/ml_reproducibility/models.py": "1d0b1cb63b713bc76e349cc2145f9cb549887a3dae359328c53c78ad6f4c1321",
+    "src/ml_reproducibility/preprocessing.py": "320832369e2b60309c56560810b78486f11071cdd5112dbbd809a1cb71cdeace",
+    "src/ml_reproducibility/provenance.py": "ac8c9a8d0a25e6e9c8881abf5fa7b7cd30a636f075f7413564e7a2623cdeef89",
+    "src/ml_reproducibility/release.py": "3faac53726d1641f94398d1206b56f47de82334dab718b8894b67a29c781cef5"
+  },
+  "lock_schema": 2
+}
