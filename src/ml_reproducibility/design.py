@@ -7,6 +7,7 @@ from pathlib import Path
 
 from .config import load_config
 from .provenance import sha256_path
+from .serialization import write_json
 
 LOCK_SCHEMA_VERSION = 2
 
@@ -64,8 +65,7 @@ def freeze_design(root: Path, config_path: Path, *, overwrite: bool = False) -> 
             for path in sorted(files, key=lambda item: _relative(root, item))
         },
     }
-    destination.parent.mkdir(parents=True, exist_ok=True)
-    destination.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+    write_json(destination, payload)
     return destination
 
 

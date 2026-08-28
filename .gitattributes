@@ -1,0 +1,9 @@
+# Every scientific artifact in this repository is verified by SHA-256. Git's end-of-line
+# conversion would rewrite bytes on checkout and change those hashes: on a default
+# Git-for-Windows install (core.autocrlf=true) the Adult design lock and preregistration
+# capsule both hash differently from their frozen values, so verify-design-lock and
+# record-external-anchor fail on an otherwise correct clone.
+#
+# Disabling text conversion for every path makes the working tree byte-identical to the
+# committed objects on all platforms. Do not replace this with `text=auto`.
+* -text

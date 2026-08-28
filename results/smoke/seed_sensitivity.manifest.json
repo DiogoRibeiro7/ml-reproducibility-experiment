@@ -8,7 +8,7 @@
     "name": "scikit-learn breast_cancer smoke dataset"
   },
   "design_lock_path": "artifacts/smoke_design_lock.json",
-  "design_lock_sha256": "241508fe120c439752351d80809e9185063162daacc4403cf1b52febf0f7311f",
+  "design_lock_sha256": "0ccef6d12cdb9f76a97abd93021e41fd74dbcde1dd1720ff0ade837874708758",
   "environment": {
     "machine": "x86_64",
     "packages": {
@@ -23,10 +23,10 @@
       "statsmodels": "0.14.6",
       "threadpoolctl": "3.6.0"
     },
-    "platform_release": "6.18.35",
+    "platform_release": "6.6.87.2-microsoft-standard-WSL2",
     "platform_system": "Linux",
     "processor": "",
-    "python_executable": "/opt/pyvenv/bin/python",
+    "python_executable": "/usr/local/bin/python",
     "python_implementation": "CPython",
     "python_version": "3.13.5",
     "thread_environment": {
@@ -37,17 +37,17 @@
     },
     "threadpools": [
       {
-        "architecture": "SkylakeX",
+        "architecture": "Haswell",
         "internal_api": "openblas",
-        "num_threads": 5,
+        "num_threads": 22,
         "threading_layer": "pthreads",
         "user_api": "blas",
         "version": "0.3.30"
       },
       {
-        "architecture": "SkylakeX",
+        "architecture": "Haswell",
         "internal_api": "openblas",
-        "num_threads": 5,
+        "num_threads": 22,
         "threading_layer": "pthreads",
         "user_api": "blas",
         "version": "0.3.30"
@@ -55,21 +55,21 @@
       {
         "architecture": null,
         "internal_api": "openmp",
-        "num_threads": 5,
+        "num_threads": 22,
         "threading_layer": null,
         "user_api": "openmp",
         "version": null
       }
     ]
   },
-  "environment_sha256": "368455ce205e3523867e978fd0e93b93ee8411e239a37cd259acb46a241e0e8c",
+  "environment_sha256": "c14cc420463715659168dec7058de3c10a3d24fe6fc1a2003869102f1209e23a",
   "execution_policy": {
     "n_jobs": 1,
     "numeric_threads": 1
   },
   "experiment": "seed_sensitivity",
-  "manifest_payload_sha256": "25606105f28be26f13c25c016dae557be0018c029895d74cd5c7ac4af0ae8b36",
+  "manifest_payload_sha256": "4f35802b6ff0fa2dc5c1a0bbaf74b8898a663dfefe134699cd6eb1c7bef5e74a",
   "outputs_sha256": {
-    "results/smoke/seed_sensitivity.csv": "5400e5288f35dc9f3a5e4cbbec77f8404542a9ebfecdb2e6e8ba7350510f1e2c"
+    "results/smoke/seed_sensitivity.csv": "5a965e9447607b6288eaf505e7889e5081b2e92ab33fbd849016d4a61e4799f7"
   }
 }

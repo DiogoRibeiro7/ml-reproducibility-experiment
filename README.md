@@ -39,7 +39,7 @@ No neural-network or deep-learning model is used.
 
 ## Prospective Adult design
 
-The v0.4.0 primary design contains
+The v0.5.0 primary design contains
 
 \[
 \boxed{636\text{ classical-ML fits}}.
@@ -137,7 +137,7 @@ Poetry remains the project metadata/tooling convention. Because Poetry was unava
 
 ## Machine-verifiable preregistration capsule
 
-v0.4.0 strengthens the prospective boundary. A local JSON that merely claims to point at a release is no longer sufficient.
+v0.4.0 strengthened the prospective boundary: a local JSON that merely claims to point at a release is not sufficient. v0.5.0 keeps that boundary unchanged and makes the artifact bytes themselves platform-independent.
 
 After the Adult design has been frozen, the command
 
@@ -174,8 +174,8 @@ Do not hand-create `adult_external_anchor.json`. Record it with:
 poetry run ml-repro --root . record-external-anchor \
   --config configs/adult.yml \
   --kind github_release_asset \
-  --url https://github.com/OWNER/REPO/releases/download/v0.4.0/adult_preregistration_capsule.json \
-  --immutable-ref v0.4.0
+  --url https://github.com/OWNER/REPO/releases/download/v0.5.0/adult_preregistration_capsule.json \
+  --immutable-ref v0.5.0
 ```
 
 The command retrieves the remote object and refuses to create the local anchor unless
@@ -212,10 +212,10 @@ Therefore changing the local external-anchor record after empirical execution in
 
 ## Required primary execution order
 
-The repository contains a v0.4.0 Adult design lock. **Do not re-freeze it.**
+The repository contains a v0.5.0 Adult design lock. **Do not re-freeze it.**
 
 ```text
-locked v0.4.0 design
+locked v0.5.0 design
         ↓
 build deterministic preregistration capsule
         ↓
@@ -310,6 +310,14 @@ poetry run ml-repro --root . release-status --config configs/smoke.yml
 
 Smoke artifacts live under `results/smoke/`.
 
+## Deterministic artifact bytes
+
+Every scientific CSV and JSON output is written through `src/ml_reproducibility/serialization.py`, which pins LF newlines and the 12-significant-digit float format. Python text mode and `DataFrame.to_csv` otherwise emit the host platform's newline, which would change every SHA-256 and fail the release gate on line endings alone.
+
+`.gitattributes` disables Git end-of-line conversion for the same reason. Without it, a clone made with the Git-for-Windows default `core.autocrlf=true` produces a design lock and preregistration capsule whose hashes differ from the frozen values, and the study cannot be verified at all.
+
+Aggregate metrics and every derived table are portable across operating systems. Per-fit prediction and score signatures are not, because continuous scores depend on the BLAS build. See [Study design](docs/STUDY_DESIGN.md) and `environment/runtime-policy.json`.
+
 ## Development
 
 ```bash
@@ -324,4 +332,4 @@ See [Study design](docs/STUDY_DESIGN.md) and [Prospective protocol](docs/PROTOCO
 
 ## Current status
 
-`v0.4.0` is a **pre-Adult empirical release**. The canonical Adult source bytes and Adult model results are intentionally absent. The design is frozen and the deterministic preregistration capsule is included locally, but primary execution remains blocked until those exact capsule bytes are published externally and verified.
+`v0.5.0` is a **pre-Adult empirical release**. The canonical Adult source bytes and Adult model results are intentionally absent. The design is frozen and the deterministic preregistration capsule is included locally, but primary execution remains blocked until those exact capsule bytes are published externally and verified.

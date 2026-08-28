@@ -22,7 +22,8 @@ jobs:
             pytest==9.0.2 \
             ruff==0.12.12 \
             mypy==1.17.1 \
-            pandas-stubs==2.2.3.250527
+            pandas-stubs==2.2.3.250527 \
+            types-PyYAML==6.0.12.20260815
       - name: Ruff
         run: ruff check .
       - name: Mypy

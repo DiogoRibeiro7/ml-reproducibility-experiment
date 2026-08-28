@@ -1,213 +1,189 @@
-# Release validation — v0.4.0
+# Release validation — v0.5.0
 
 ## Scope
 
-`v0.4.0` is a **pre-Adult empirical release**. Its purpose is to make the prospective publication boundary machine-verifiable before the primary UCI Adult experiment is executed.
+`v0.5.0` is a **pre-Adult empirical release**, like `v0.4.0` before it. It contains no Adult source bytes, no Adult acquisition receipt, no Adult model outputs and no primary empirical conclusion.
 
-The release does **not** contain Adult source bytes, an Adult acquisition receipt, Adult model outputs, or a primary empirical conclusion.
+It exists because `v0.4.0` carried a defect in the reproducibility machinery itself.
 
-## Prospective primary design
+## Why the design was re-frozen
 
-The locked Adult study contains
+`v0.4.0` wrote every scientific CSV and JSON artifact through Python text mode and `DataFrame.to_csv`, both of which emit the host platform's line ending. Identical science therefore produced different SHA-256 values on Windows and Linux.
 
-\[
-120_{\text{split}}
-+
-120_{\text{seed}}
-+
-12_{\text{procedure}}
-+
-192_{\text{SGD factorial}}
-+
-192_{\text{RF factorial}}
-=
-\boxed{636\text{ fits}}.
-\]
-
-Final Adult design-lock SHA-256:
+The consequences were concrete and were reproduced before this release was prepared:
 
 ```text
-c2062027931090934e8a6bf32b38c319e34f9a1ba0b17fba0a6f492f48aa57a1
+v0.4.0 smoke release gate on Windows       10/12  FAIL
+  derived_tables                           all 11 tables failed, on line endings alone
 ```
 
-The lock verifies after the final source and protocol changes.
-
-## Deterministic preregistration capsule
-
-The final pre-data capsule is:
+Separately, `v0.4.0` shipped no `.gitattributes`. Cloned with the Git-for-Windows default `core.autocrlf=true`, its artifacts hashed to:
 
 ```text
-artifacts/adult_preregistration_capsule.json
+adult design lock    1f5fea91101fc7ce492d8d2a07f6ca22b964fda6fff976e1917bcf2cbe40d4c1
+capsule              5cff8aeef4eb14266ceeae210946f342bb4c9c4405c721fbe0c62dff5bdcd533
 ```
 
-SHA-256:
+instead of their frozen values, so `verify-design-lock` and `record-external-anchor` failed on a correct clone. The study could not be verified at all on a default Windows checkout.
+
+Because the affected files (`release.py`, `experiment.py`, `provenance.py`, `design.py`, `data.py`, `anchor.py`, `cli.py`, `pyproject.toml`) are covered by the Adult design lock, correcting them necessarily invalidates the `v0.4.0` lock and capsule. That is why this is a scientific version change rather than an operational patch.
+
+**The experimental design is unchanged.** Models, seeds, tolerances, preprocessing procedures, estimands and the 636-fit commitment are identical to `v0.4.0`.
+
+## What changed
+
+1. All scientific writes route through `src/ml_reproducibility/serialization.py`, which pins LF newlines and the 12-significant-digit float format. On Linux the emitted bytes are unchanged, so the correction is backwards-compatible with the canonical platform.
+2. `.gitattributes` sets `* -text`, disabling Git end-of-line conversion.
+3. `types-PyYAML` was added to the development dependencies and to CI. Without it `mypy src` fails on `config.py`, so the `v0.4.0` CI definition could not have passed its own type-check step.
+4. `environment/runtime-policy.json` now declares the canonical platform and states which quantities are platform-portable.
+5. `artifacts/release_manifest.json` moves to schema 5 and covers every tracked file. Schema 4 hashed 39 files and omitted `.github/workflows/ci.yml`, `LICENSE` and `.gitignore`, leaving the CI definition and the licence unprotected.
+
+## Frozen identities
 
 ```text
-c610b3c867a6322d64dafce5f22f5568d6e397c23031a121ec9ef72b57d6609b
+Adult design lock SHA-256:
+603e793cefa13a4a21bed9ecf70ef83aff90ee96d9c33fa503a8f1b08d92b355
+
+Adult preregistration capsule SHA-256:
+142d9de4824a2c80a100ace206812dc183ada6b5bc1a82ef52b3f76f112370a1
+
+Smoke design lock SHA-256:
+0ccef6d12cdb9f76a97abd93021e41fd74dbcde1dd1720ff0ade837874708758
 ```
 
-The capsule reports:
+The capsule reports `expected_raw_fit_count = 636`, with both pre-data assertions false, exactly as in `v0.4.0`.
+
+## Canonical validation environment
+
+Every result below was produced on the declared canonical platform:
 
 ```text
-expected_raw_fit_count = 636
-adult_source_bytes_present_when_capsule_built = false
-adult_empirical_outputs_present_when_capsule_built = false
+platform          Linux x86_64 (6.6.87.2-microsoft-standard-WSL2)
+python            3.13.5
+packages          exact match to environment/requirements.lock.txt (21/21)
+BLAS              OpenBLAS 0.3.30 (Haswell)
+n_jobs            1
+numeric_threads   1
 ```
 
-Its content includes the complete design-lock payload, configuration digest, pinned UCI source policy, model and preprocessing sets, primary metric, reproducibility tolerances and exact family fit counts.
+## Static analysis and tests — actually executed
 
-Capsule construction is explicitly rejected if canonical Adult source bytes or Adult empirical outputs are already present.
-
-## Remote-anchor hardening
-
-`v0.3.0` required a local anchor record but did not independently retrieve the claimed external object. `v0.4.0` closes that gap.
-
-`record-external-anchor` now:
-
-1. verifies the local design lock and preregistration capsule;
-2. requires an HTTPS external object;
-3. retrieves the remote object;
-4. requires the remote bytes to equal the local capsule **exactly**;
-5. checks that the remote JSON binds the same design lock and configuration;
-6. records local, remote and design-lock hashes only after those checks pass.
-
-For `github_release_asset`, the URL must have the form
+`v0.4.0` honestly recorded that Ruff and mypy had never been run. They have now been run, at the versions the project pins, and the failures they found have been fixed.
 
 ```text
-https://github.com/<owner>/<repo>/releases/download/<ref>/<asset>
+ruff 0.12.12      All checks passed          (v0.4.0: 6 errors)
+mypy 1.17.1       Success, 14 source files   (v0.4.0: 32 errors, strict)
+pytest            23 passed                  (v0.4.0: 17)
+compileall        passed
 ```
 
-and `<ref>` must equal `immutable_ref`.
+`artifacts/release_manifest.json` now records `ruff_executed_locally: true` and `mypy_executed_locally: true`.
 
-An established `adult_external_anchor.json` is not silently overwritten.
-
-## Anchor binding after acquisition
-
-Adult acquisition now writes a schema-2 receipt that binds:
-
-- the UCI Adult DOI;
-- canonical Adult source hashes;
-- the retrieval timestamp recorded by the execution environment;
-- the verified local external-anchor hash;
-- the local preregistration-capsule hash;
-- the independently retrieved remote-capsule hash;
-- the immutable external reference and URL.
-
-Adult loading verifies that receipt when an empirical run is requested. Every Adult raw-run manifest and the analysis manifest bind the same anchor evidence. The final primary release manifest also records the anchor identity.
-
-Consequently, replacing the external-anchor record after empirical execution invalidates both the data provenance and result-manifest chain.
-
-## Negative pre-execution boundary test
-
-With the final v0.4.0 design lock and capsule in place, but no external publication record:
+The six new tests are in `tests/test_serialization.py`. They pin the byte contract of every writer. Reintroducing the platform newline in either the CSV or the JSON path fails them:
 
 ```text
-verify-external-anchor exit status = 1
-download-data          exit status = 1
+CRLF injected into the CSV writer   -> 2 tests fail
+CRLF injected into the JSON writer  -> 3 tests fail
 ```
-
-Both fail at the external-anchor requirement, before Adult acquisition.
-
-After those tests:
-
-```text
-adult.data   ABSENT
-adult.test   ABSENT
-receipt.json ABSENT
-```
-
-Therefore the boundary does not merely document the intended order; it prevents primary data acquisition through the supported CLI before the remote capsule is established.
 
 ## Smoke release gate
 
-The offline scikit-learn breast-cancer profile was rebuilt under the final v0.4.0 source tree and smoke design lock.
-
-Result:
-
-\[
-\boxed{12/12\text{ release checks passed}}.
-\]
-
-The checks are:
-
-1. design lock;
-2. canonical reference environment;
-3. dataset provenance;
-4. split-sensitivity raw family;
-5. seed-sensitivity raw family;
-6. preprocessing-sensitivity raw family;
-7. factorial raw family;
-8. environment consistency;
-9. baseline consistency;
-10. deterministic-control invariance;
-11. exact derived-table reconstruction;
-12. full independent empirical replay.
-
-The smoke release status is `release_authorised = true`.
-
-## Repeatability check
-
-The complete smoke experiment was executed twice consecutively under the same final v0.4.0 environment.
-
-All 20 scientific CSV/manifest files were SHA-256 identical between executions.
-
-The canonical hashes are stored in:
-
 ```text
-artifacts/smoke_scientific_hashes.sha256
+12/12 release checks passed
+release_authorised = true
 ```
 
-This includes the raw experiment families, their manifests, all derived tables and the analysis manifest.
+The checks are design lock, canonical reference environment, dataset provenance, the four raw families, environment consistency, baseline consistency, deterministic-control invariance, exact derived-table reconstruction, and full independent empirical replay.
+
+## Continuity with v0.4.0
+
+The re-freeze did not move the science. Comparing the regenerated smoke study against `v0.4.0`:
+
+```text
+10 of 11 derived tables   byte-identical
+ 1 of 11 derived tables   factorial_anova_roc_auc differs
+```
+
+The single difference is one F statistic:
+
+```text
+v0.4.0   sgd_logistic,C(model_seed),...,0.602666204968,...
+v0.5.0   sgd_logistic,C(model_seed),...,0.602666204969,...
+```
+
+`sum_sq`, `df` and `share_total_ss` are identical to the last stored digit. The change is one unit in the twelfth significant figure, produced by a different OpenBLAS build, not by any change to the analysis.
+
+## Cross-platform verification
+
+The same release was independently checked on Windows against the canonical Linux artifacts:
+
+```text
+                                       v0.4.0        v0.5.0
+derived tables reproduced byte-exact    0 / 11       10 / 11
+smoke gate                             10 / 12       10 / 12
+```
+
+The line-ending defect is closed: 10 of 11 derived tables now reproduce byte-for-byte across operating systems, where previously none did.
+
+Two checks still fail off the canonical platform, and both are expected:
+
+```text
+derived_tables          factorial_anova_roc_auc  (F statistic, 12th significant digit)
+full_empirical_replay   split_sensitivity.score_sha256
+```
+
+Measured against the canonical Linux run, the Windows replay produced **identical predicted classes for every fit**, with metrics agreeing to `3.1e-13` — far inside the `1e-11` replay tolerance and the smallest declared reproducibility tolerance of `0.001`. Only the continuous-score SHA-256 signatures differ.
+
+This is a property of the study, not a defect, and the gate is deliberately **not** relaxed to accommodate it. Behavioural score signatures are signatures of one numerical environment. A replication on other hardware that reproduces the derived tables while differing in score hashes has reproduced the conclusions and not the bytes, and `docs/PROTOCOL.md` requires that outcome to be reported as a platform difference rather than as a failed reproduction or as tampering.
+
+## Negative pre-execution boundary test
+
+With the v0.5.0 design lock and capsule in place and no external publication record:
+
+```text
+verify-external-anchor  exit status = 1
+download-data           exit status = 1
+```
+
+Both fail at the external-anchor requirement. After the tests:
+
+```text
+adult.data    ABSENT
+adult.test    ABSENT
+receipt.json  ABSENT
+data/raw/     not created
+```
+
+The boundary prevents acquisition through the supported CLI rather than merely documenting the intended order.
+
+## Capsule determinism
+
+The preregistration capsule was rebuilt from the frozen design on a second operating system and reproduced **byte-for-byte**. The capsule is a function of the locked design alone, not of the machine that generated it.
 
 ## Adversarial regression protection
 
-The existing coordinated-tampering test remains active: a non-reference raw result can be altered together with its behavioural hashes, but `full_empirical_replay` reconstructs the model fit independently and rejects the modified result.
-
-The new anchor test suite adds the following protections:
-
-- a capsule must represent the complete 636-fit locked Adult design;
-- capsule creation fails after an Adult source file appears;
-- a remote object differing by even one byte from the local capsule is rejected;
-- non-HTTPS anchor URLs are rejected;
-- a GitHub release asset whose URL tag disagrees with `immutable_ref` is rejected.
-
-## Unit and syntax validation
-
-Final local test result:
-
-\[
-\boxed{17/17\text{ tests passed}}.
-\]
-
-`python -m compileall src tests` also passes.
-
-Ruff and mypy are configured in `pyproject.toml` and CI. They were not available in the isolated validation runtime, and network access was unavailable for installing them, so they are **not** falsely reported as locally executed.
-
-A manual line-length check found no Python source or test line exceeding the configured 100-character Ruff limit.
+The coordinated-tampering test remains active and passing: a non-reference raw result altered together with its behavioural hashes is still rejected by `full_empirical_replay`, because the gate reconstructs the fit independently.
 
 ## Adult release status
 
-The current Adult release status is deliberately unauthorised.
-
-The passing pre-execution gates are:
+Deliberately unauthorised.
 
 ```text
 design_lock            PASS
 reference_environment  PASS
+external_anchor        FAIL   no externally published capsule recorded
+dataset                FAIL   unavailable without the anchor
+raw_* (4 families)     FAIL   absent
+
+release_authorised = false   (2/8)
 ```
 
-The external-anchor gate fails because no externally published capsule has yet been recorded. Dataset and empirical-result gates therefore also remain unavailable or missing.
-
-This is the intended state for v0.4.0.
+This is the intended state.
 
 ## Next authorised action
 
-The next legitimate action is **external publication**, not Adult execution.
+External publication, not Adult execution.
 
-Publish the exact bytes of:
+The capsule must be published as an asset of an immutable release **in a public repository**. `record-external-anchor` retrieves the object with an unauthenticated HTTPS request; a private repository returns 404 to that request and cannot anchor the preregistration. Beyond the tooling, a preregistration only its author can read is not an external anchor.
 
-```text
-artifacts/adult_preregistration_capsule.json
-```
-
-through a stable HTTPS release/archive object, then run `record-external-anchor`. Only after the retrieved remote bytes match the capsule may the primary Adult source files be acquired.
+Publish the exact bytes of `artifacts/adult_preregistration_capsule.json`, then run `record-external-anchor`. Only once the retrieved remote bytes match may Adult be acquired.

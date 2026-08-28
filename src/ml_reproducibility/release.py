@@ -7,9 +7,10 @@ import json
 import math
 import platform
 import tempfile
+from collections.abc import Callable
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Callable
+from typing import Any
 
 import pandas as pd
 
@@ -27,6 +28,7 @@ from .experiment import (
     split_sensitivity_specs,
 )
 from .provenance import environment_identity, sha256_bytes, sha256_path
+from .serialization import write_csv, write_json
 
 RAW_FAMILIES: dict[str, Callable[[ExperimentConfig], list[RunSpec]]] = {
     "split_sensitivity": split_sensitivity_specs,
@@ -73,13 +75,19 @@ def _resolve(root: Path, configured: Path) -> Path:
 def _stable_csv(frame: pd.DataFrame, path: Path) -> None:
     """Write a derived table using the experiment's canonical CSV representation."""
 
-    frame.to_csv(path, index=False, float_format="%.12g")
+    write_csv(frame, path)
 
 
 def _spec_tuple(spec: RunSpec) -> tuple[str, str, int, int, str]:
     """Represent a run specification in the same key space as result rows."""
 
     return (spec.experiment, spec.model, spec.split_seed, spec.model_seed, spec.preprocessing)
+
+
+def _as_int(value: Any) -> int:
+    """Coerce a pandas scalar to a plain Python integer."""
+
+    return int(value)
 
 
 def _frame_spec_tuples(frame: pd.DataFrame) -> list[tuple[str, str, int, int, str]]:
@@ -89,8 +97,8 @@ def _frame_spec_tuples(frame: pd.DataFrame) -> list[tuple[str, str, int, int, st
         (
             str(row.experiment),
             str(row.model),
-            int(row.split_seed),
-            int(row.model_seed),
+            _as_int(row.split_seed),
+            _as_int(row.model_seed),
             str(row.preprocessing),
         )
         for row in frame.itertuples(index=False)
@@ -283,18 +291,18 @@ def _verify_baseline_consistency(
         "n_test",
     ]
     for model in cfg.models:
-        rows: list[pd.Series] = []
+        rows: list[pd.Series[Any]] = []
         for family in ("split_sensitivity", "seed_sensitivity", "preprocessing_sensitivity"):
             frame = frames[family]
-            row = frame.loc[
+            matches = frame.loc[
                 (frame["model"] == model)
                 & (frame["split_seed"] == cfg.baseline_split_seed)
                 & (frame["model_seed"] == cfg.baseline_model_seed)
                 & (frame["preprocessing"] == "standard")
             ]
-            if len(row) != 1:
+            if len(matches) != 1:
                 raise ValueError(f"Missing unique baseline row for {model} in {family}")
-            rows.append(row.iloc[0])
+            rows.append(matches.iloc[0])
         first = rows[0]
         for row in rows[1:]:
             if any(row[column] != first[column] for column in comparable):
@@ -303,7 +311,7 @@ def _verify_baseline_consistency(
     factorial = frames["factorial"]
     seed = frames["seed_sensitivity"]
     for model in cfg.factorial_models:
-        row = factorial.loc[
+        factorial_rows = factorial.loc[
             (factorial["model"] == model)
             & (factorial["split_seed"] == cfg.baseline_split_seed)
             & (factorial["model_seed"] == cfg.baseline_model_seed)
@@ -315,9 +323,11 @@ def _verify_baseline_consistency(
             & (seed["model_seed"] == cfg.baseline_model_seed)
             & (seed["preprocessing"] == "standard")
         ]
-        if len(row) != 1 or len(reference) != 1:
+        if len(factorial_rows) != 1 or len(reference) != 1:
             raise ValueError(f"Missing factorial/reference baseline overlap for {model}")
-        if any(row.iloc[0][column] != reference.iloc[0][column] for column in comparable):
+        if any(
+            factorial_rows.iloc[0][column] != reference.iloc[0][column] for column in comparable
+        ):
             raise ValueError(f"Factorial baseline disagrees with the main baseline for {model}")
 
 
@@ -548,8 +558,7 @@ def write_release_status(root: Path, config_path: Path) -> Path:
         "release_authorised": passed,
         "checks": [asdict(check) for check in checks],
     }
-    destination.parent.mkdir(parents=True, exist_ok=True)
-    destination.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+    write_json(destination, payload)
     return destination
 
 
@@ -587,7 +596,7 @@ def finalise_primary_release(root: Path, config_path: Path) -> Path:
         )
     }
     destination = result_dir / "primary_release_manifest.json"
-    payload = {
+    payload: dict[str, object] = {
         "schema": 3,
         "dataset": cfg.dataset,
         "config_sha256": sha256_path(config_path),
@@ -600,5 +609,5 @@ def finalise_primary_release(root: Path, config_path: Path) -> Path:
     if cfg.dataset == "adult":
         anchor_evidence = verify_external_anchor(root, config_path, lock_path)
         payload["external_anchor"] = anchor_evidence.as_manifest_payload(root)
-    destination.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+    write_json(destination, payload)
     return destination

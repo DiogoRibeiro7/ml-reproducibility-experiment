@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import warnings
+from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable
 
 import numpy as np
 import pandas as pd
@@ -19,6 +19,7 @@ from .data import DatasetBundle
 from .metrics import score_classifier
 from .models import build_model
 from .preprocessing import build_preprocessor
+from .serialization import write_csv
 
 
 @dataclass(frozen=True)
@@ -174,8 +175,10 @@ def factorial_specs(cfg: ExperimentConfig) -> list[RunSpec]:
 def save_frame(frame: pd.DataFrame, path: Path) -> None:
     """Save a result table in a stable row order."""
 
-    path.parent.mkdir(parents=True, exist_ok=True)
-    frame.sort_values(
-        ["experiment", "model", "split_seed", "model_seed", "preprocessing"],
-        kind="stable",
-    ).to_csv(path, index=False, float_format="%.12g")
+    write_csv(
+        frame.sort_values(
+            ["experiment", "model", "split_seed", "model_seed", "preprocessing"],
+            kind="stable",
+        ),
+        path,
+    )

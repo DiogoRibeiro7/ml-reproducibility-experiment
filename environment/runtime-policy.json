@@ -2,5 +2,9 @@
   "python_version": "3.13.5",
   "n_jobs": 1,
   "numeric_threads": 1,
-  "policy": "Canonical primary execution uses one estimator job and threadpoolctl-enforced single-thread numerical kernels."
+  "canonical_platform_system": "Linux",
+  "canonical_blas_internal_api": "openblas",
+  "policy": "Canonical primary execution uses one estimator job and threadpoolctl-enforced single-thread numerical kernels.",
+  "platform_binding": "Aggregate metrics and every derived analysis table are portable across operating systems. The per-fit prediction and score SHA-256 signatures are not: they depend on the BLAS build, so full_empirical_replay reproduces exactly only on the declared canonical platform. Verification on another platform is expected to reproduce all derived tables byte-for-byte while differing in continuous-score signatures.",
+  "serialization": "All scientific CSV and JSON artifacts are written with LF newlines through ml_reproducibility.serialization so that byte identity is a property of the experiment rather than of the host operating system."
 }

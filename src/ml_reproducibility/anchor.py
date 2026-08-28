@@ -20,6 +20,7 @@ from .experiment import (
     split_sensitivity_specs,
 )
 from .provenance import sha256_bytes, sha256_path
+from .serialization import write_text
 
 CAPSULE_SCHEMA_VERSION: Final[int] = 1
 EXTERNAL_ANCHOR_SCHEMA_VERSION: Final[int] = 2
@@ -166,7 +167,7 @@ def build_preregistration_capsule(root: Path, config_path: Path) -> Path:
     destination.parent.mkdir(parents=True, exist_ok=True)
     destination.write_bytes(_canonical_json(payload))
     digest_path = destination.with_suffix(destination.suffix + ".sha256")
-    digest_path.write_text(f"{sha256_path(destination)}  {destination.name}\n", encoding="utf-8")
+    write_text(digest_path, f"{sha256_path(destination)}  {destination.name}\n")
     return destination
 
 
@@ -253,7 +254,7 @@ def _fetch_remote_bytes(url: str) -> bytes:
     )
     with urllib.request.urlopen(request, timeout=30) as response:  # noqa: S310
         _validate_https_url(str(response.geturl()))
-        payload = response.read(MAX_REMOTE_CAPSULE_BYTES + 1)
+        payload: bytes = response.read(MAX_REMOTE_CAPSULE_BYTES + 1)
     if len(payload) > MAX_REMOTE_CAPSULE_BYTES:
         raise ValueError("Remote preregistration capsule exceeds the maximum allowed size")
     return payload

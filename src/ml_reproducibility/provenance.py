@@ -8,10 +8,12 @@ import json
 import os
 import platform
 import sys
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable
 
 from threadpoolctl import threadpool_info
+
+from .serialization import canonical_json_bytes, write_json
 
 PACKAGES: tuple[str, ...] = (
     "numpy",
@@ -144,7 +146,5 @@ def write_manifest(
     }
     if external_anchor is not None:
         manifest["external_anchor"] = external_anchor
-    payload = json.dumps(manifest, indent=2, sort_keys=True).encode("utf-8")
-    manifest["manifest_payload_sha256"] = sha256_bytes(payload)
-    destination.parent.mkdir(parents=True, exist_ok=True)
-    destination.write_text(json.dumps(manifest, indent=2, sort_keys=True), encoding="utf-8")
+    manifest["manifest_payload_sha256"] = sha256_bytes(canonical_json_bytes(manifest))
+    write_json(destination, manifest)

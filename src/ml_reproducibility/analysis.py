@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from itertools import combinations
 from pathlib import Path
-from typing import Final
+from typing import Any, Final
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -35,9 +35,10 @@ def summarise(frame: pd.DataFrame, *, grouping: list[str]) -> pd.DataFrame:
     return summary
 
 
-def _reference_mask(group: pd.DataFrame, *, experiment: str) -> pd.Series:
+def _reference_mask(group: pd.DataFrame, *, experiment: str) -> pd.Series[Any]:
     """Identify the one prospectively declared reference row in a result family."""
 
+    mask: pd.Series[Any]
     if experiment == "split_sensitivity":
         mask = group["split_seed"] == group["split_seed"].min()
     elif experiment == "seed_sensitivity":
@@ -439,11 +440,11 @@ def plot_anova(table: pd.DataFrame, *, output: Path) -> None:
 
     shown = table.loc[table["source"] != "Residual"].copy()
     pivot = shown.pivot(index="source", columns="model", values="share_total_ss").fillna(0.0)
-    ax = pivot.plot(kind="bar", figsize=(11, 5))
+    fig, ax = plt.subplots(figsize=(11, 5))
+    pivot.plot(kind="bar", ax=ax)
     ax.set_ylabel("Share of total sum of squares")
     ax.set_title("ROC-AUC sensitivity attribution")
     ax.tick_params(axis="x", rotation=25)
-    fig = ax.get_figure()
     fig.tight_layout()
     output.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(output, dpi=160)

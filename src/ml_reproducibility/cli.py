@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import argparse
 import json
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable
 
 import pandas as pd
 
@@ -35,6 +35,7 @@ from .experiment import (
 )
 from .provenance import write_manifest
 from .release import finalise_primary_release, write_release_status
+from .serialization import write_csv
 
 
 def _resolve(root: Path, configured: Path) -> Path:
@@ -114,8 +115,7 @@ def _analyse(cfg: ExperimentConfig, *, root: Path, config_path: Path) -> None:
     outputs: list[Path] = []
     for name, table in tables.items():
         output = result_dir / f"{name}.csv"
-        output.parent.mkdir(parents=True, exist_ok=True)
-        table.to_csv(output, index=False, float_format="%.12g")
+        write_csv(table, output)
         outputs.append(output)
 
     plot_distributions(

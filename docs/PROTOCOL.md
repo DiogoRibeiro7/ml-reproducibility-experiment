@@ -2,7 +2,7 @@
 
 ## Status
 
-This protocol defines the first primary UCI Adult execution for `v0.4.0`.
+This protocol defines the first primary UCI Adult execution for `v0.5.0`.
 
 No Adult source bytes or Adult model outputs are present in this release. The frozen design must first be represented by a deterministic preregistration capsule and those exact bytes must be published externally before source retrieval.
 
@@ -106,11 +106,22 @@ The design lock binds:
 - `pyproject.toml`;
 - `environment/requirements.lock.txt`;
 - `environment/runtime-policy.json`;
-- every Python source file in `src/ml_reproducibility/`, including the capsule and remote-anchor verification code.
+- every Python source file in `src/ml_reproducibility/`, including the capsule, remote-anchor
+  verification and deterministic-serialisation code.
 
 ## Runtime policy
 
 The canonical primary environment uses Python 3.13.5, the exact package versions in `environment/requirements.lock.txt`, one estimator job and one numerical thread. Run manifests capture the numerical backend and an environment identity hash. All raw experiment families must have the same environment identity.
+
+### Deterministic serialisation
+
+Every scientific CSV and JSON artifact is written through `src/ml_reproducibility/serialization.py`, which pins LF newlines and the 12-significant-digit float format. Python text mode and `DataFrame.to_csv` otherwise emit the host platform's newline, so identical science produced on Windows and Linux would yield different SHA-256 values and fail the release gate on line endings alone. Byte identity is therefore a property of the experiment, not of the machine.
+
+### Platform binding of behavioural signatures
+
+Aggregate metrics and every derived analysis table are portable across operating systems. The per-fit `prediction_sha256` and `score_sha256` signatures are not: continuous scores differ in their final floating-point bits between BLAS builds. `full_empirical_replay` therefore reproduces exactly only on the canonical platform declared in `environment/runtime-policy.json`.
+
+This is a deliberate strictness, not a defect. A replication attempt on another platform is expected to reproduce all derived tables byte-for-byte while differing in continuous-score signatures, and that outcome must be reported as a platform difference rather than as a failed reproduction or as tampering.
 
 The repository retains Poetry metadata. Because Poetry itself was not available in the isolated build environment used to prepare this release, the exact prospective runtime is additionally represented by the package lock above rather than by a newly generated `poetry.lock`.
 

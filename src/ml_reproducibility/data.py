@@ -6,13 +6,15 @@ import hashlib
 import json
 import urllib.request
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Final
+from typing import Any, Final
 
 import numpy as np
 import pandas as pd
 from sklearn.datasets import load_breast_cancer
+
+from .serialization import write_json
 
 ADULT_DOI: Final[str] = "10.24432/C5XW20"
 ADULT_COLUMNS: Final[tuple[str, ...]] = (
@@ -51,7 +53,7 @@ class DatasetBundle:
     """Features, labels and provenance for a classification dataset."""
 
     X: pd.DataFrame
-    y: pd.Series
+    y: pd.Series[Any]
     provenance: dict[str, object]
 
 
@@ -112,13 +114,11 @@ def download_adult(
         "schema": 2,
         "dataset": "UCI Adult",
         "doi": ADULT_DOI,
-        "retrieved_at_utc": datetime.now(timezone.utc).isoformat(),
+        "retrieved_at_utc": datetime.now(UTC).isoformat(),
         "files": observed,
         "external_anchor": external_anchor,
     }
-    (raw_dir / "receipt.json").write_text(
-        json.dumps(receipt, indent=2, sort_keys=True), encoding="utf-8"
-    )
+    write_json(raw_dir / "receipt.json", receipt)
     return observed
 
 

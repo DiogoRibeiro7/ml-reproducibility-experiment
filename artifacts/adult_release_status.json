@@ -11,7 +11,7 @@
       "passed": true
     },
     {
-      "detail": "Missing external prospective anchor: /mnt/data/ml-reproducibility-experiment-v0.4.0/artifacts/adult_external_anchor.json. Publish the preregistration capsule before retrieving Adult data.",
+      "detail": "Missing external prospective anchor: /work/artifacts/adult_external_anchor.json. Publish the preregistration capsule before retrieving Adult data.",
       "name": "external_anchor",
       "passed": false
     },

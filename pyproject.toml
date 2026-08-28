@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "ml-reproducibility-experiment"
-version = "0.4.0"
+version = "0.5.0"
 description = "A prospectively locked classical-ML study of split, seed, procedure and behavioural reproducibility."
 authors = ["Diogo Ribeiro"]
 readme = "README.md"
@@ -23,6 +23,7 @@ pytest = "9.0.2"
 ruff = "0.12.12"
 mypy = "1.17.1"
 pandas-stubs = "2.2.3.250527"
+types-PyYAML = "6.0.12.20260815"
 
 [tool.poetry.scripts]
 ml-repro = "ml_reproducibility.cli:main"
@@ -57,3 +58,15 @@ python_version = "3.13"
 strict = true
 warn_unused_configs = true
 packages = ["ml_reproducibility"]
+
+# scikit-learn, statsmodels, matplotlib and threadpoolctl ship no type information.
+# Their absence is a property of those distributions, not of this study's code, so the
+# missing stubs are declared here rather than silenced with per-line ignores.
+[[tool.mypy.overrides]]
+module = [
+    "matplotlib.*",
+    "sklearn.*",
+    "statsmodels.*",
+    "threadpoolctl.*",
+]
+ignore_missing_imports = true

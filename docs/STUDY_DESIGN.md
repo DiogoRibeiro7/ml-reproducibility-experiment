@@ -157,6 +157,21 @@ The canonical primary run fixes:
 
 Numerical kernels are constrained at execution through `threadpoolctl`. Python and package versions are prospectively pinned in `environment/runtime-policy.json` and `environment/requirements.lock.txt`, both of which are included in the design hash.
 
+## What reproduces where
+
+The study distinguishes three levels of agreement, because they do not travel together across machines.
+
+| Quantity | Portable across platforms |
+|---|---|
+| ROC-AUC and the other aggregate metrics | yes, to well under the smallest declared tolerance |
+| every derived analysis table | yes, byte-for-byte |
+| per-fit prediction and score SHA-256 signatures | **no** |
+
+Continuous scores differ in their final floating-point bits between BLAS builds, so `score_sha256` is a signature of one numerical environment rather than of the statistical procedure. The canonical platform is declared in `environment/runtime-policy.json`.
+
+This matters for how a failed replication is read. A rerun on different hardware that reproduces every derived table but differs in score signatures has reproduced the study's conclusions and not its bytes. That is a platform difference, and the protocol requires it to be reported as such rather than as a failed reproduction.
+
+
 ## Prospective publication boundary
 
 The primary design is externally anchored through a deterministic preregistration capsule. The capsule contains the verified design-lock payload, configuration hash, pinned Adult source-byte policy, primary metric, tolerances, models, procedures and exact family fit counts.
