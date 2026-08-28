@@ -27,6 +27,7 @@ from .experiment import (
     seed_sensitivity_specs,
     split_sensitivity_specs,
 )
+from .models import STOCHASTIC_MODELS
 from .provenance import environment_identity, sha256_bytes, sha256_path
 from .serialization import write_csv, write_json
 
@@ -50,6 +51,11 @@ DERIVED_TABLES: tuple[str, ...] = (
     "convergence_summary",
 )
 SIGNATURE_COLUMNS: tuple[str, ...] = ("prediction_sha256", "score_sha256")
+SCORE_DIAGNOSTIC_COLUMNS: tuple[str, ...] = (
+    "score_kind",
+    "n_unique_scores",
+    "score_abs_median",
+)
 DIAGNOSTIC_COLUMNS: tuple[str, ...] = (
     "converged",
     "convergence_warning_count",
@@ -230,6 +236,7 @@ def _verify_raw_family(
         "n_test",
         *METRICS,
         *SIGNATURE_COLUMNS,
+        *SCORE_DIAGNOSTIC_COLUMNS,
         *DIAGNOSTIC_COLUMNS,
     }
     missing = required - set(frame.columns)
@@ -252,6 +259,17 @@ def _verify_raw_family(
     for signature in SIGNATURE_COLUMNS:
         if not frame[signature].astype(str).str.fullmatch(r"[0-9a-f]{64}").all():
             raise ValueError(f"{name}.{signature} contains invalid SHA-256 values")
+
+    unique_scores = pd.to_numeric(frame["n_unique_scores"], errors="coerce")
+    if unique_scores.isna().any() or (unique_scores < 1).any():
+        raise ValueError(f"{name}.n_unique_scores is invalid")
+    abs_median = pd.to_numeric(frame["score_abs_median"], errors="coerce")
+    if abs_median.isna().any() or not abs_median.map(math.isfinite).all():
+        raise ValueError(f"{name}.score_abs_median is not finite")
+    if not frame["score_kind"].astype(str).isin(
+        {"decision_function", "predict_proba", "prediction"}
+    ).all():
+        raise ValueError(f"{name}.score_kind contains an unknown scoring mode")
 
     warning_count = pd.to_numeric(frame["convergence_warning_count"], errors="coerce")
     iterations = pd.to_numeric(frame["n_iter"], errors="coerce")
@@ -286,6 +304,7 @@ def _verify_baseline_consistency(
     comparable = [
         *METRICS,
         *SIGNATURE_COLUMNS,
+        *SCORE_DIAGNOSTIC_COLUMNS,
         *DIAGNOSTIC_COLUMNS,
         "n_train",
         "n_test",
@@ -331,14 +350,21 @@ def _verify_baseline_consistency(
             raise ValueError(f"Factorial baseline disagrees with the main baseline for {model}")
 
 
-def _verify_deterministic_controls(seed: pd.DataFrame) -> None:
+def _verify_deterministic_controls(seed: pd.DataFrame, cfg: ExperimentConfig) -> None:
     """Require deterministic controls to be invariant to irrelevant model-seed labels."""
 
-    for model in ("logistic", "linear_svm"):
+    for model in cfg.models:
+        if model in STOCHASTIC_MODELS:
+            continue
         subset = seed.loc[seed["model"] == model]
         if subset.empty:
             continue
-        for column in (*METRICS, *SIGNATURE_COLUMNS, *DIAGNOSTIC_COLUMNS):
+        for column in (
+            *METRICS,
+            *SIGNATURE_COLUMNS,
+            *SCORE_DIAGNOSTIC_COLUMNS,
+            *DIAGNOSTIC_COLUMNS,
+        ):
             if subset[column].nunique(dropna=False) != 1:
                 raise ValueError(f"Deterministic control {model} varies across seeds in {column}")
 
@@ -400,6 +426,8 @@ def _verify_full_empirical_replay(
         "n_train",
         "n_test",
         *SIGNATURE_COLUMNS,
+        "score_kind",
+        "n_unique_scores",
         *DIAGNOSTIC_COLUMNS,
     ]
     for family, factory in RAW_FAMILIES.items():
@@ -512,7 +540,7 @@ def evaluate_release(
             ("baseline_consistency", lambda: _verify_baseline_consistency(frames, cfg)),
             (
                 "deterministic_controls",
-                lambda: _verify_deterministic_controls(frames["seed_sensitivity"]),
+                lambda: _verify_deterministic_controls(frames["seed_sensitivity"], cfg),
             ),
             (
                 "derived_tables",

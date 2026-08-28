@@ -40,7 +40,7 @@ def _copy_adult_design_repo(source: Path, destination: Path) -> Path:
 
 
 def test_capsule_binds_locked_adult_design_before_data(tmp_path: Path) -> None:
-    """The deterministic capsule must encode the complete 636-fit pre-data design."""
+    """The deterministic capsule must encode the complete pre-data design."""
 
     source = Path(__file__).resolve().parents[1]
     config = _copy_adult_design_repo(source, tmp_path)
@@ -49,7 +49,7 @@ def test_capsule_binds_locked_adult_design_before_data(tmp_path: Path) -> None:
     capsule = build_preregistration_capsule(tmp_path, config)
     assert verify_local_capsule(tmp_path, config) == capsule
     payload = json.loads(capsule.read_text(encoding="utf-8"))
-    assert payload["expected_raw_fit_count"] == 636
+    assert payload["expected_raw_fit_count"] == 1196
     assert payload["predata_assertions"] == {
         "adult_empirical_outputs_present_when_capsule_built": False,
         "adult_source_bytes_present_when_capsule_built": False,

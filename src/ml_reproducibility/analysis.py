@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 from itertools import combinations
 from pathlib import Path
 from typing import Any, Final
@@ -10,12 +11,68 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import statsmodels.api as sm
+from numpy.typing import NDArray
 from statsmodels.formula.api import ols
 
 from .config import ExperimentConfig
+from .models import STOCHASTIC_MODELS
 
 METRICS: Final[tuple[str, ...]] = ("accuracy", "balanced_accuracy", "f1", "roc_auc")
 TOLERANCE_NUMERIC_SLACK: Final[float] = 1.0e-12
+
+
+def wilson_interval(
+    successes: int, trials: int, *, z: float = 1.959963984540054
+) -> tuple[float, float]:
+    """Return a Wilson score interval for a binomial proportion.
+
+    The Wald interval is unusable here: reproduction rates are routinely at or near 0 and
+    1, where it produces zero width or limits outside [0, 1].
+    """
+
+    if trials <= 0:
+        return (float("nan"), float("nan"))
+    phat = successes / trials
+    denominator = 1.0 + z * z / trials
+    centre = (phat + z * z / (2.0 * trials)) / denominator
+    half = (z / denominator) * math.sqrt(
+        phat * (1.0 - phat) / trials + z * z / (4.0 * trials * trials)
+    )
+    return (max(0.0, centre - half), min(1.0, centre + half))
+
+
+def _pairwise_rate(values: NDArray[np.float64], tolerance: float) -> float:
+    """Return the fraction of unordered run pairs agreeing within *tolerance*."""
+
+    drift = np.asarray([abs(a - b) for a, b in combinations(values, 2)], dtype=float)
+    return float(np.mean(drift <= tolerance + TOLERANCE_NUMERIC_SLACK))
+
+
+def jackknife_interval(
+    values: NDArray[np.float64], tolerance: float, *, z: float = 1.959963984540054
+) -> tuple[float, float]:
+    """Return a delete-one-run jackknife interval for the pairwise reproduction rate.
+
+    The pairwise rate is a U-statistic over all C(n, 2) pairs of runs. Those pairs are not
+    independent -- each run appears in n-1 of them -- so treating the pair count as a
+    binomial sample size would badly understate the uncertainty. Resampling whole runs
+    respects the dependence.
+    """
+
+    n = int(values.size)
+    if n < 3:
+        return (float("nan"), float("nan"))
+    full = _pairwise_rate(values, tolerance)
+    leave_one_out = np.asarray(
+        [_pairwise_rate(np.delete(values, index), tolerance) for index in range(n)],
+        dtype=float,
+    )
+    pseudo = n * full - (n - 1) * leave_one_out
+    variance = float(np.var(pseudo, ddof=1)) / n
+    if not math.isfinite(variance) or variance <= 0.0:
+        return (full, full)
+    half = z * math.sqrt(variance)
+    return (max(0.0, full - half), min(1.0, full + half))
 
 
 def summarise(frame: pd.DataFrame, *, grouping: list[str]) -> pd.DataFrame:
@@ -35,16 +92,28 @@ def summarise(frame: pd.DataFrame, *, grouping: list[str]) -> pd.DataFrame:
     return summary
 
 
-def _reference_mask(group: pd.DataFrame, *, experiment: str) -> pd.Series[Any]:
-    """Identify the one prospectively declared reference row in a result family."""
+def _reference_mask(
+    group: pd.DataFrame, *, experiment: str, cfg: ExperimentConfig
+) -> pd.Series[Any]:
+    """Identify the one prospectively declared reference row in a result family.
+
+    The reference is taken from the declared design rather than from the position of a
+    row inside the frame. Selecting it by, say, the smallest split seed would silently
+    redefine the primary estimand if the seed grid were ever centred on the baseline or
+    otherwise reordered.
+    """
 
     mask: pd.Series[Any]
     if experiment == "split_sensitivity":
-        mask = group["split_seed"] == group["split_seed"].min()
+        mask = (group["split_seed"] == cfg.baseline_split_seed) & (
+            group["model_seed"] == cfg.baseline_model_seed
+        )
     elif experiment == "seed_sensitivity":
-        mask = group["model_seed"] == group["model_seed"].min()
+        mask = (group["model_seed"] == cfg.baseline_model_seed) & (
+            group["split_seed"] == cfg.baseline_split_seed
+        )
     elif experiment == "preprocessing_sensitivity":
-        mask = group["preprocessing"] == "standard"
+        mask = group["preprocessing"] == cfg.reference_preprocessing
     else:
         raise ValueError(f"Unsupported reproducibility family: {experiment}")
     if int(mask.sum()) != 1:
@@ -54,10 +123,12 @@ def _reference_mask(group: pd.DataFrame, *, experiment: str) -> pd.Series[Any]:
     return mask
 
 
-def _reference_value(group: pd.DataFrame, *, experiment: str, metric: str) -> float:
+def _reference_value(
+    group: pd.DataFrame, *, experiment: str, metric: str, cfg: ExperimentConfig
+) -> float:
     """Return the prospectively declared reference value for one model/family."""
 
-    mask = _reference_mask(group, experiment=experiment)
+    mask = _reference_mask(group, experiment=experiment, cfg=cfg)
     return float(group.loc[mask, metric].iloc[0])
 
 
@@ -66,6 +137,7 @@ def reproducibility_summary(
     *,
     experiment: str,
     metric: str,
+    cfg: ExperimentConfig,
 ) -> pd.DataFrame:
     """Quantify absolute drift of genuine reruns or alternatives from the reference."""
 
@@ -73,8 +145,8 @@ def reproducibility_summary(
         raise ValueError(f"Unsupported metric: {metric}")
     rows: list[dict[str, object]] = []
     for model, group in frame.groupby("model", sort=True):
-        reference = _reference_value(group, experiment=experiment, metric=metric)
-        mask = _reference_mask(group, experiment=experiment)
+        reference = _reference_value(group, experiment=experiment, metric=metric, cfg=cfg)
+        mask = _reference_mask(group, experiment=experiment, cfg=cfg)
         comparison = group.loc[~mask, metric].to_numpy(dtype=float)
         if comparison.size == 0:
             raise ValueError(f"No non-reference observations for {experiment}/{model}")
@@ -104,6 +176,7 @@ def reference_reproducibility_curve(
     experiment: str,
     metric: str,
     tolerances: tuple[float, ...],
+    cfg: ExperimentConfig,
 ) -> pd.DataFrame:
     """Estimate rerun probability conditional on the prospectively fixed reference result.
 
@@ -117,12 +190,17 @@ def reference_reproducibility_curve(
         raise ValueError("Reference reproduction probability is defined only for split/seed reruns")
     rows: list[dict[str, object]] = []
     for model, group in frame.groupby("model", sort=True):
-        reference = _reference_value(group, experiment=experiment, metric=metric)
-        mask = _reference_mask(group, experiment=experiment)
+        reference = _reference_value(group, experiment=experiment, metric=metric, cfg=cfg)
+        mask = _reference_mask(group, experiment=experiment, cfg=cfg)
         values = group.loc[~mask, metric].to_numpy(dtype=float)
         drift = np.abs(values - reference)
+        # A seed rerun of an estimator with no stochastic component reproduces by
+        # construction. Flagging it keeps a tautology from reading as an estimate.
+        deterministic = experiment == "seed_sensitivity" and str(model) not in STOCHASTIC_MODELS
         for tolerance in tolerances:
             hits = drift <= tolerance + TOLERANCE_NUMERIC_SLACK
+            reproduced = int(np.count_nonzero(hits))
+            lower, upper = wilson_interval(reproduced, int(values.size))
             rows.append(
                 {
                     "experiment": experiment,
@@ -131,8 +209,12 @@ def reference_reproducibility_curve(
                     "tolerance": float(tolerance),
                     "reference": reference,
                     "n_replications": int(values.size),
-                    "n_reproduced": int(np.count_nonzero(hits)),
+                    "n_reproduced": reproduced,
                     "reference_reproduction_rate": float(np.mean(hits)),
+                    "ci_lower": lower,
+                    "ci_upper": upper,
+                    "ci_method": "wilson_95",
+                    "deterministic_by_construction": bool(deterministic),
                 }
             )
     return pd.DataFrame(rows)
@@ -159,8 +241,10 @@ def pairwise_reproducibility_curve(
             raise ValueError(
                 f"At least two runs are required for pairwise reproducibility: {model}"
             )
+        deterministic = experiment == "seed_sensitivity" and str(model) not in STOCHASTIC_MODELS
         for tolerance in tolerances:
             hits = pair_drift <= tolerance + TOLERANCE_NUMERIC_SLACK
+            lower, upper = jackknife_interval(values, float(tolerance))
             rows.append(
                 {
                     "experiment": experiment,
@@ -171,6 +255,10 @@ def pairwise_reproducibility_curve(
                     "n_pairs": int(pair_drift.size),
                     "n_reproduced_pairs": int(np.count_nonzero(hits)),
                     "pairwise_reproduction_rate": float(np.mean(hits)),
+                    "ci_lower": lower,
+                    "ci_upper": upper,
+                    "ci_method": "jackknife_over_runs_95",
+                    "deterministic_by_construction": bool(deterministic),
                 }
             )
     return pd.DataFrame(rows)
@@ -181,6 +269,7 @@ def procedure_stability(
     *,
     metric: str,
     tolerances: tuple[float, ...],
+    cfg: ExperimentConfig,
 ) -> pd.DataFrame:
     """Describe finite sensitivity to the predeclared alternative preprocessing procedures."""
 
@@ -189,9 +278,9 @@ def procedure_stability(
     rows: list[dict[str, object]] = []
     for model, group in frame.groupby("model", sort=True):
         reference = _reference_value(
-            group, experiment="preprocessing_sensitivity", metric=metric
+            group, experiment="preprocessing_sensitivity", metric=metric, cfg=cfg
         )
-        mask = _reference_mask(group, experiment="preprocessing_sensitivity")
+        mask = _reference_mask(group, experiment="preprocessing_sensitivity", cfg=cfg)
         alternatives = group.loc[~mask, metric].to_numpy(dtype=float)
         drift = np.abs(alternatives - reference)
         for tolerance in tolerances:
@@ -249,6 +338,7 @@ def behavioural_reference_match_summary(
     frame: pd.DataFrame,
     *,
     experiment: str,
+    cfg: ExperimentConfig,
 ) -> pd.DataFrame:
     """Measure exact prediction/score matching against the fixed reference behaviour."""
 
@@ -261,7 +351,7 @@ def behavioural_reference_match_summary(
 
     rows: list[dict[str, object]] = []
     for model, group in frame.groupby("model", sort=True):
-        mask = _reference_mask(group, experiment=experiment)
+        mask = _reference_mask(group, experiment=experiment, cfg=cfg)
         reference = group.loc[mask].iloc[0]
         comparison = group.loc[~mask]
         reference_prediction = str(reference["prediction_sha256"])
@@ -305,6 +395,11 @@ def factorial_anova(frame: pd.DataFrame, *, metric: str = "roc_auc") -> pd.DataF
             .reset_index()
             .rename(columns={"index": "source"})
         )
+        # The crossed design holds one observation per cell, so the residual line *is* the
+        # unmodelled three-way interaction rather than replication error. F ratios and
+        # p-values computed against it would not be valid tests of anything, so only the
+        # descriptive variance decomposition is retained.
+        table = table.drop(columns=[c for c in ("F", "PR(>F)") if c in table.columns])
         total_ss = float(table["sum_sq"].sum())
         table.insert(0, "model", str(model))
         table["share_total_ss"] = table["sum_sq"] / total_ss if total_ss > 0 else 0.0
@@ -360,12 +455,14 @@ def build_analysis_tables(
             experiment="split_sensitivity",
             metric=metric,
             tolerances=cfg.reproducibility_tolerances,
+            cfg=cfg,
         ),
         reference_reproducibility_curve(
             seed,
             experiment="seed_sensitivity",
             metric=metric,
             tolerances=cfg.reproducibility_tolerances,
+            cfg=cfg,
         ),
     ]
     pairwise_curves = [
@@ -383,10 +480,10 @@ def build_analysis_tables(
         ),
     ]
     drifts = [
-        reproducibility_summary(split, experiment="split_sensitivity", metric=metric),
-        reproducibility_summary(seed, experiment="seed_sensitivity", metric=metric),
+        reproducibility_summary(split, experiment="split_sensitivity", metric=metric, cfg=cfg),
+        reproducibility_summary(seed, experiment="seed_sensitivity", metric=metric, cfg=cfg),
         reproducibility_summary(
-            preprocess, experiment="preprocessing_sensitivity", metric=metric
+            preprocess, experiment="preprocessing_sensitivity", metric=metric, cfg=cfg
         ),
     ]
     return {
@@ -397,16 +494,18 @@ def build_analysis_tables(
         "reference_reproducibility_curve": pd.concat(reference_curves, ignore_index=True),
         "pairwise_reproducibility_curve": pd.concat(pairwise_curves, ignore_index=True),
         "procedure_stability": procedure_stability(
-            preprocess, metric=metric, tolerances=cfg.reproducibility_tolerances
+            preprocess, metric=metric, tolerances=cfg.reproducibility_tolerances, cfg=cfg
         ),
         "conditional_split_seed_variability": conditional_split_seed_variability(
             split, seed, metric=metric
         ),
         "behavioural_reference_match": pd.concat(
             [
-                behavioural_reference_match_summary(seed, experiment="seed_sensitivity"),
                 behavioural_reference_match_summary(
-                    preprocess, experiment="preprocessing_sensitivity"
+                    seed, experiment="seed_sensitivity", cfg=cfg
+                ),
+                behavioural_reference_match_summary(
+                    preprocess, experiment="preprocessing_sensitivity", cfg=cfg
                 ),
             ],
             ignore_index=True,

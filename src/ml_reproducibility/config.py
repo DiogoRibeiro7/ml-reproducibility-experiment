@@ -36,6 +36,7 @@ class ExperimentConfig:
     factorial_models: tuple[ModelName, ...]
     models: tuple[ModelName, ...]
     preprocessing: tuple[PreprocessName, ...]
+    reference_preprocessing: PreprocessName
     primary_metric: Literal["roc_auc"]
     reproducibility_tolerances: tuple[float, ...]
     n_jobs: int
@@ -71,14 +72,35 @@ class ExperimentConfig:
             )
         if not self.preprocessing:
             raise ValueError("At least one preprocessing variant must be configured")
-        if "standard" not in self.preprocessing:
-            raise ValueError("standard preprocessing is required as the reference procedure")
+        if self.reference_preprocessing not in self.preprocessing:
+            raise ValueError(
+                "reference_preprocessing must appear in the declared preprocessing set"
+            )
+        if self.baseline_split_seed not in self.split_seed_grid():
+            raise ValueError("baseline_split_seed must appear in the split-sensitivity grid")
+        if self.baseline_model_seed not in self.seed_grid():
+            raise ValueError("baseline_model_seed must appear in the seed-sensitivity grid")
         if not self.reproducibility_tolerances:
             raise ValueError("At least one reproducibility tolerance is required")
         if any(value <= 0.0 or value >= 1.0 for value in self.reproducibility_tolerances):
             raise ValueError("reproducibility tolerances must lie strictly between 0 and 1")
         if tuple(sorted(set(self.reproducibility_tolerances))) != self.reproducibility_tolerances:
             raise ValueError("reproducibility tolerances must be unique and increasing")
+
+
+    def split_seed_grid(self) -> tuple[int, ...]:
+        """Return the prospective split-sensitivity seed grid."""
+
+        return tuple(
+            self.baseline_split_seed + offset for offset in range(self.split_repetitions)
+        )
+
+    def seed_grid(self) -> tuple[int, ...]:
+        """Return the prospective estimator-seed grid."""
+
+        return tuple(
+            self.baseline_model_seed + offset for offset in range(self.seed_repetitions)
+        )
 
 
 def _require_mapping(value: object, *, label: str) -> dict[str, Any]:
@@ -135,9 +157,13 @@ def load_config(path: Path) -> ExperimentConfig:
         raise TypeError("reproducibility_tolerances must be a list")
     tolerances = tuple(float(item) for item in tolerances_raw)
 
+    reference_preprocessing = str(cfg.get("reference_preprocessing", "standard"))
+    if reference_preprocessing not in _ALLOWED_PREPROCESSING:
+        raise ValueError(f"Unsupported reference preprocessing: {reference_preprocessing}")
+
     primary_metric = str(cfg.get("primary_metric", "roc_auc"))
     if primary_metric != "roc_auc":
-        raise ValueError("v0.4.0 supports roc_auc as the prospective primary metric")
+        raise ValueError("roc_auc is the only supported prospective primary metric")
 
     return ExperimentConfig(
         dataset=cast(DatasetName, dataset),
@@ -153,6 +179,7 @@ def load_config(path: Path) -> ExperimentConfig:
         factorial_models=cast(tuple[ModelName, ...], tuple(factorial_values)),
         models=cast(tuple[ModelName, ...], tuple(model_values)),
         preprocessing=cast(tuple[PreprocessName, ...], tuple(preprocessing_values)),
+        reference_preprocessing=cast(PreprocessName, reference_preprocessing),
         primary_metric=cast(Literal["roc_auc"], primary_metric),
         reproducibility_tolerances=tolerances,
         n_jobs=int(cfg.get("n_jobs", 1)),

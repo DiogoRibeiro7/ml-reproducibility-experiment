@@ -1,6 +1,6 @@
 {
   "config_path": "configs/smoke.yml",
-  "config_sha256": "e9ca0ad578742f5f40a45b30692a0a94d6e37e487fd378871f7633e7c478206d",
+  "config_sha256": "5871e1eb59c4e38e09fea930b40b0aabb302a6156eb290c599406857a73f4851",
   "dataset": {
     "canonical_array_sha256": "3a54a12ffd3db348fbe319a9056329cde28da5b2e5ecc26ff7fb9f54aa7cc9f4",
     "n_features": 30,
@@ -8,7 +8,7 @@
     "name": "scikit-learn breast_cancer smoke dataset"
   },
   "design_lock_path": "artifacts/smoke_design_lock.json",
-  "design_lock_sha256": "0ccef6d12cdb9f76a97abd93021e41fd74dbcde1dd1720ff0ade837874708758",
+  "design_lock_sha256": "f501a6830e6518ca1a183cf427b8a62bb759d43462dc8d54922a611b85cf57fb",
   "environment": {
     "machine": "x86_64",
     "packages": {
@@ -68,18 +68,18 @@
     "numeric_threads": 1
   },
   "experiment": "analysis",
-  "manifest_payload_sha256": "7e543448cc3b2f00915990405f8a2846e79cc7d40137242d018184f69e55f151",
+  "manifest_payload_sha256": "7efa4613812d9f65d7d6b8d993aac9fc9312c4b02b97c825f10966c6c6570956",
   "outputs_sha256": {
-    "results/smoke/behavioural_reference_match.csv": "497a8a23fd9804f42d3734f2b4b97c7b738c6902bcf645c22aefb8861501a4c6",
-    "results/smoke/conditional_split_seed_variability.csv": "a1e5216e3337c595a7c57e7971fbf56137ea174d301ce0fc635bfcc0ca8a9150",
-    "results/smoke/convergence_summary.csv": "26e73facfbe41838a6403489a01f57f7188ee6c640b0bc472d5fdaa213894e93",
-    "results/smoke/factorial_anova_roc_auc.csv": "ecea57eb107f96cc79004d3e2d340910ae994bb540b2eb90f6618a86b5e68c33",
-    "results/smoke/pairwise_reproducibility_curve.csv": "8c4ddfd2b68a2e28eef669462537e701df0b10dedac8807b772bfb96acb0a288",
-    "results/smoke/preprocessing_summary.csv": "40c7f21061ae8420a2ac6b5d2bc5ab5bd10ce9fd4a82f0af8535e40f7870f3fc",
-    "results/smoke/procedure_stability.csv": "31d5d41e73dc17ad18aea2f36111667fdd0631b813a7fddbba0a136cfb36dcc9",
-    "results/smoke/reference_reproducibility_curve.csv": "3ec6302c0ebfec7aec51a7b5a83cc75f7e47b3d11c17517ed746fe6ab8f224c3",
-    "results/smoke/reproducibility_drift.csv": "5c4b21c2688223bbf7ab8849e4cfa9f08bf8ef3d4dafb7df12ec0b671910d49f",
-    "results/smoke/seed_summary.csv": "4c4c67fd045965c7c87bd9355faa17732fcf34afa47aa470857afb497847141b",
-    "results/smoke/split_summary.csv": "f6d1570a67b57072e58027e877d0cb9669f5e55b59094edf1dfb6d924ffed2c8"
+    "results/smoke/behavioural_reference_match.csv": "e998e930ea6f5459c59603b6af4b3e65517ba63449240a60e3eaed0470642275",
+    "results/smoke/conditional_split_seed_variability.csv": "7f7f26aa3e3cdb43186001997cb35eed567724cc7d2bd57fa5a1c3bc3737380d",
+    "results/smoke/convergence_summary.csv": "4433f3b62d93cf724ba1c43434c38ae70968168e2bd7a41518014b964432f33c",
+    "results/smoke/factorial_anova_roc_auc.csv": "aab336e9c9555d76779be771f3941280dff0be209197dfe617e79c16c623e093",
+    "results/smoke/pairwise_reproducibility_curve.csv": "35d13edf75f856d545d556c9f198318f073d913e6eb2d2248a9a1aa8d26afa82",
+    "results/smoke/preprocessing_summary.csv": "d43f95ea022667cce22d3f676165bfcd5ca538068ba53f78b83b75254e4bb8ec",
+    "results/smoke/procedure_stability.csv": "f784a0e01dd871fd3ae3dde14889141adde1c92cfaff2da0402b03eb2eeb1dd1",
+    "results/smoke/reference_reproducibility_curve.csv": "b4090b3845c7033a245dd8eb42e9a58b36f17865d5856159784e88b545eb4df5",
+    "results/smoke/reproducibility_drift.csv": "d9f4b940a9a73f5a8d1c730371890b5198d156d3a4b0d06dea341eadb8403d2d",
+    "results/smoke/seed_summary.csv": "e8908a74556e00f9d3ce4abe8a1a9f89a83a87a4abe9758b1f4618adf76d5438",
+    "results/smoke/split_summary.csv": "29a95cc0c4347442dacdf79eac070d10af17b5a108d2a1eaf0f867b6d72ea7c3"
   }
 }

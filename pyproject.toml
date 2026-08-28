@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "ml-reproducibility-experiment"
-version = "0.5.0"
+version = "0.6.0"
 description = "A prospectively locked classical-ML study of split, seed, procedure and behavioural reproducibility."
 authors = ["Diogo Ribeiro"]
 readme = "README.md"
@@ -46,8 +46,9 @@ ignore = ["ANN401"]
 
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**/*.py" = ["S101"]
-"tests/*.py" = ["S101"]
+# Test doubles mirror the scikit-learn estimator protocol, whose design matrix is `X`.
+"tests/**/*.py" = ["S101", "N803"]
+"tests/*.py" = ["S101", "N803"]
 "src/ml_reproducibility/data.py" = ["N803", "N806", "N815"]
 "src/ml_reproducibility/experiment.py" = ["N806"]
 "src/ml_reproducibility/metrics.py" = ["N803"]

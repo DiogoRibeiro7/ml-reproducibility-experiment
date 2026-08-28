@@ -1,6 +1,6 @@
 {
   "config_path": "configs/smoke.yml",
-  "config_sha256": "e9ca0ad578742f5f40a45b30692a0a94d6e37e487fd378871f7633e7c478206d",
+  "config_sha256": "5871e1eb59c4e38e09fea930b40b0aabb302a6156eb290c599406857a73f4851",
   "dataset": {
     "canonical_array_sha256": "3a54a12ffd3db348fbe319a9056329cde28da5b2e5ecc26ff7fb9f54aa7cc9f4",
     "n_features": 30,
@@ -8,7 +8,7 @@
     "name": "scikit-learn breast_cancer smoke dataset"
   },
   "design_lock_path": "artifacts/smoke_design_lock.json",
-  "design_lock_sha256": "0ccef6d12cdb9f76a97abd93021e41fd74dbcde1dd1720ff0ade837874708758",
+  "design_lock_sha256": "f501a6830e6518ca1a183cf427b8a62bb759d43462dc8d54922a611b85cf57fb",
   "environment": {
     "machine": "x86_64",
     "packages": {
@@ -68,8 +68,8 @@
     "numeric_threads": 1
   },
   "experiment": "factorial",
-  "manifest_payload_sha256": "5184f177d95ed607ed0c87308c3318bf2cee94c4ba773426884ee80e5be69f0f",
+  "manifest_payload_sha256": "6b371f9b86d3e9392f21a32f84709f953e27f583c74321f0a77076f3b68f635a",
   "outputs_sha256": {
-    "results/smoke/factorial.csv": "8bbe265a6bc9230a52afd7b8159519c2382beca4259d4ff71bda76fb6dc311d7"
+    "results/smoke/factorial.csv": "59d86d6b2570535f083697d7f64f85e333b7718271b883e8dbac4c9c12feb595"
   }
 }

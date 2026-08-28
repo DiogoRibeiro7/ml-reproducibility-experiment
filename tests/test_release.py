@@ -49,3 +49,41 @@ def test_full_replay_detects_coordinated_raw_result_tampering(tmp_path: Path) ->
 
     with pytest.raises(ValueError, match="Full replay"):
         _verify_full_empirical_replay(root=tmp_path, cfg=cfg, frames=frames)
+
+
+def test_full_replay_rejects_tampered_score_diagnostics(tmp_path: Path) -> None:
+    """Score diagnostics are replayed exactly, so editing them cannot pass the gate.
+
+    The diagnostics are what make a degenerate score vector visible. If they could be
+    rewritten independently of the fit, a run whose scores collapsed could be presented as
+    healthy while still matching on every other column.
+    """
+
+    root = Path(__file__).resolve().parents[1]
+    base = load_config(root / "configs" / "smoke.yml")
+    cfg = replace(
+        base,
+        models=("sgd_logistic",),
+        factorial_models=("sgd_logistic",),
+        split_repetitions=2,
+        seed_repetitions=2,
+        factorial_split_repetitions=2,
+        factorial_seed_repetitions=2,
+        preprocessing=("standard", "none"),
+    )
+    bundle = load_breast_cancer_smoke()
+    frames = {
+        "split_sensitivity": run_specs(bundle, cfg, split_sensitivity_specs(cfg)),
+        "seed_sensitivity": run_specs(bundle, cfg, seed_sensitivity_specs(cfg)),
+        "preprocessing_sensitivity": run_specs(
+            bundle, cfg, preprocessing_sensitivity_specs(cfg)
+        ),
+        "factorial": run_specs(bundle, cfg, factorial_specs(cfg)),
+    }
+    target = frames["preprocessing_sensitivity"].copy()
+    # Claim a healthy, well-spread score vector for the unscaled run.
+    target.loc[target.index[-1], "n_unique_scores"] = 999_999
+    frames["preprocessing_sensitivity"] = target
+
+    with pytest.raises(ValueError, match="Full replay"):
+        _verify_full_empirical_replay(root=tmp_path, cfg=cfg, frames=frames)

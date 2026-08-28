@@ -12,11 +12,14 @@ factorial_models:
 - sgd_logistic
 models:
 - logistic
+- linear_svm
 - random_forest
 - sgd_logistic
 preprocessing:
 - standard
+- robust
 - none
+reference_preprocessing: standard
 primary_metric: roc_auc
 reproducibility_tolerances:
 - 0.001

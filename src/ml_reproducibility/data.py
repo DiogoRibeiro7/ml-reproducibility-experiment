@@ -183,6 +183,16 @@ def load_adult(
         raise ValueError(f"Unrecognised target values at rows: {unknown}")
     y = y.astype("int8")
 
+    # Adult contains exact duplicate records. The declared procedure keeps them, because
+    # a conventional workflow does, but combining adult.data with adult.test and then
+    # re-splitting can place copies of one record on both sides of a split. The resulting
+    # optimism is a property of the workflow under study, so the count is recorded as
+    # observed provenance rather than silently removed or silently ignored.
+    duplicate_rows = int(frame.duplicated().sum())
+    duplicate_rows_with_target = int(
+        pd.concat([frame, y.rename("income")], axis=1).duplicated().sum()
+    )
+
     return DatasetBundle(
         X=frame,
         y=y,
@@ -191,6 +201,9 @@ def load_adult(
             "doi": ADULT_DOI,
             "n_rows": int(frame.shape[0]),
             "n_features": int(frame.shape[1]),
+            "n_duplicate_feature_rows": duplicate_rows,
+            "n_duplicate_labelled_rows": duplicate_rows_with_target,
+            "duplicate_policy": "retained",
             "raw_sha256": observed,
             "acquisition_receipt": receipt,
         },

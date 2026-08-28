@@ -112,13 +112,13 @@ def split_sensitivity_specs(cfg: ExperimentConfig) -> list[RunSpec]:
     return [
         RunSpec(
             model=model,
-            split_seed=cfg.baseline_split_seed + repetition,
+            split_seed=split_seed,
             model_seed=cfg.baseline_model_seed,
-            preprocessing="standard",
+            preprocessing=cfg.reference_preprocessing,
             experiment="split_sensitivity",
         )
         for model in cfg.models
-        for repetition in range(cfg.split_repetitions)
+        for split_seed in cfg.split_seed_grid()
     ]
 
 
@@ -129,12 +129,12 @@ def seed_sensitivity_specs(cfg: ExperimentConfig) -> list[RunSpec]:
         RunSpec(
             model=model,
             split_seed=cfg.baseline_split_seed,
-            model_seed=cfg.baseline_model_seed + repetition,
-            preprocessing="standard",
+            model_seed=model_seed,
+            preprocessing=cfg.reference_preprocessing,
             experiment="seed_sensitivity",
         )
         for model in cfg.models
-        for repetition in range(cfg.seed_repetitions)
+        for model_seed in cfg.seed_grid()
     ]
 
 

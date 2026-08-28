@@ -27,7 +27,7 @@ run-all
         ↓
 release-status
         ↓
-full independent replay of all 636 fits
+full independent replay of all 1196 fits
         ↓
 finalise-primary-release
 ```

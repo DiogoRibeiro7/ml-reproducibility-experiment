@@ -1,5 +1,8 @@
 """Analysis tests."""
 
+from dataclasses import replace
+from pathlib import Path
+
 import pandas as pd
 
 from ml_reproducibility.analysis import (
@@ -9,6 +12,15 @@ from ml_reproducibility.analysis import (
     procedure_stability,
     reference_reproducibility_curve,
 )
+from ml_reproducibility.config import ExperimentConfig, load_config
+
+_BASE = load_config(Path(__file__).resolve().parents[1] / "configs" / "smoke.yml")
+
+
+def _cfg(**overrides: object) -> ExperimentConfig:
+    """Return a smoke configuration with the declared reference overridden."""
+
+    return replace(_BASE, **overrides)  # type: ignore[arg-type]
 
 
 def test_factorial_anova_returns_per_model_sensitivity_shares() -> None:
@@ -71,10 +83,14 @@ def test_reference_curve_excludes_the_reference_run() -> None:
         experiment="split_sensitivity",
         metric="roc_auc",
         tolerances=(0.005, 0.01),
+        cfg=_cfg(baseline_split_seed=10, baseline_model_seed=20, split_repetitions=3),
     )
     assert curve.loc[curve["tolerance"] == 0.005, "n_replications"].item() == 2
     assert curve.loc[curve["tolerance"] == 0.005, "n_reproduced"].item() == 1
     assert curve.loc[curve["tolerance"] == 0.01, "n_reproduced"].item() == 2
+    assert (curve["ci_method"] == "wilson_95").all()
+    assert (curve["ci_lower"] <= curve["reference_reproduction_rate"]).all()
+    assert (curve["reference_reproduction_rate"] <= curve["ci_upper"]).all()
 
 
 def test_pairwise_curve_uses_all_distinct_run_pairs() -> None:
@@ -94,6 +110,8 @@ def test_pairwise_curve_uses_all_distinct_run_pairs() -> None:
     )
     assert curve.loc[0, "n_pairs"] == 3
     assert curve.loc[0, "n_reproduced_pairs"] == 2
+    assert curve.loc[0, "ci_method"] == "jackknife_over_runs_95"
+    assert 0.0 <= curve.loc[0, "ci_lower"] <= curve.loc[0, "ci_upper"] <= 1.0
 
 
 def test_procedure_stability_excludes_standard_reference() -> None:
@@ -106,7 +124,9 @@ def test_procedure_stability_excludes_standard_reference() -> None:
             {"model": "sgd_logistic", "preprocessing": "none", "roc_auc": 0.92},
         ]
     )
-    result = procedure_stability(frame, metric="roc_auc", tolerances=(0.005,))
+    result = procedure_stability(
+        frame, metric="roc_auc", tolerances=(0.005,), cfg=_cfg()
+    )
     assert result.loc[0, "n_alternative_procedures"] == 2
     assert result.loc[0, "n_within_tolerance"] == 1
     assert result.loc[0, "procedure_stability_fraction"] == 0.5
@@ -120,6 +140,7 @@ def test_behavioural_reference_match_excludes_reference_from_rate() -> None:
             {
                 "model": "random_forest",
                 "model_seed": 1,
+                "split_seed": 0,
                 "preprocessing": "standard",
                 "prediction_sha256": "a" * 64,
                 "score_sha256": "b" * 64,
@@ -127,13 +148,18 @@ def test_behavioural_reference_match_excludes_reference_from_rate() -> None:
             {
                 "model": "random_forest",
                 "model_seed": 2,
+                "split_seed": 0,
                 "preprocessing": "standard",
                 "prediction_sha256": "a" * 64,
                 "score_sha256": "c" * 64,
             },
         ]
     )
-    summary = behavioural_reference_match_summary(frame, experiment="seed_sensitivity")
+    summary = behavioural_reference_match_summary(
+        frame,
+        experiment="seed_sensitivity",
+        cfg=_cfg(baseline_model_seed=1, baseline_split_seed=0, seed_repetitions=2),
+    )
     assert summary.loc[0, "n_nonreference"] == 1
     assert summary.loc[0, "unique_prediction_vectors_all_runs"] == 1
     assert summary.loc[0, "unique_score_vectors_all_runs"] == 2
