@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "ml-reproducibility-experiment"
-version = "0.6.0"
+version = "0.7.0"
 description = "A prospectively locked classical-ML study of split, seed, procedure and behavioural reproducibility."
 authors = ["Diogo Ribeiro"]
 readme = "README.md"

@@ -4,8 +4,8 @@ figure_dir: figures/adult
 test_size: 0.25
 baseline_split_seed: 1729
 baseline_model_seed: 2718
-split_repetitions: 100
-seed_repetitions: 100
+split_repetitions: 30
+seed_repetitions: 30
 factorial_split_repetitions: 8
 factorial_seed_repetitions: 8
 factorial_models:

@@ -27,7 +27,7 @@ run-all
         ↓
 release-status
         ↓
-full independent replay of all 1196 fits
+full independent replay of all 636 fits
         ↓
 finalise-primary-release
 ```
@@ -68,9 +68,22 @@ poetry run ml-repro --root . record-external-anchor \
 
 Supported kinds are:
 
-- `github_release_asset`;
+- `github_release_asset` (public GitHub release);
+- `github_private_release_asset` (private GitHub release, authenticated retrieval);
 - `doi_archive_file`;
 - `archive_file`.
+
+For a private release the URL addresses the release by its immutable tag and the asset is
+named separately:
+
+```bash
+poetry run ml-repro --root . record-external-anchor \
+  --config configs/adult.yml \
+  --kind github_private_release_asset \
+  --url https://api.github.com/repos/OWNER/REPO/releases/tags/vX.Y.Z \
+  --immutable-ref vX.Y.Z \
+  --asset-name adult_preregistration_capsule.json
+```
 
 The URL must use HTTPS. `record-external-anchor` downloads the external object and creates `artifacts/adult_external_anchor.json` only when the remote bytes are identical to the locally generated capsule.
 
@@ -83,6 +96,54 @@ poetry run ml-repro --root . verify-external-anchor --config configs/adult.yml
 ```
 
 re-fetches the remote object and verifies byte identity again.
+
+
+## Anchor visibility and what the anchor proves
+
+The preregistration capsule for this study is published as an asset of an **immutable
+release in a private repository**, retrieved with `kind = github_private_release_asset`.
+This is a deliberate choice and it changes what the anchor establishes, so the limit is
+recorded rather than left to be inferred.
+
+A capsule that only its author can retrieve is not independent evidence that the design
+predated the data. The author controls the object and the account that hosts it, so a third
+party cannot confirm the ordering. Every anchor record therefore carries
+
+```text
+publicly_retrievable: false
+```
+
+and verification refuses to run if that flag disagrees with the anchor kind. The provenance
+chain states its own evidential limit instead of reading like a public preregistration.
+
+What the private anchor does still establish is real, and it is the property most local
+failures violate:
+
+- the capsule bytes were fixed **before** any Adult byte was retrieved, because the tooling
+  refuses to build a capsule once Adult source files or Adult results exist;
+- the acquisition receipt, every raw-run manifest and the final release manifest bind that
+  exact capsule digest;
+- the release is immutable, so the asset cannot be swapped after the fact without the
+  release identity changing;
+- any later edit to a design-locked file breaks the lock, the capsule digest and therefore
+  the whole chain.
+
+So the anchor is a **self-binding prospectivity control**: it prevents the design from being
+revised after the results are seen and makes such an attempt detectable, while not proving
+prospectivity to an outside reader. Claims made from this study should be worded to match
+that, and should not describe the design as externally preregistered.
+
+Restoring external verifiability does not require making the repository public. Publishing
+the capsule file alone to a DOI-backed archive and recording it with
+`kind = doi_archive_file` gives a publicly retrievable, independently timestamped anchor
+while the code stays private. That path needs no code change; it is already supported.
+
+### Credentials
+
+Retrieval reads a token from `GITHUB_TOKEN` or `GH_TOKEN`. The token is used only to fetch
+the published capsule and is never written into the anchor, a manifest or any artifact. The
+authorisation header is stripped before following GitHub's redirect to storage, so the
+credential is not sent to the storage host.
 
 ## Adult acquisition receipt
 

@@ -42,6 +42,11 @@
     },
     {
       "detail": "verified",
+      "name": "analysis_manifest",
+      "passed": true
+    },
+    {
+      "detail": "verified",
       "name": "baseline_consistency",
       "passed": true
     },

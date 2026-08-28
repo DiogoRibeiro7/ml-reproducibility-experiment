@@ -42,13 +42,13 @@ No neural-network or deep-learning model is used.
 The v0.5.0 primary design contains
 
 \[
-\boxed{1196\text{ classical-ML fits}}.
+\boxed{636\text{ classical-ML fits}}.
 \]
 
 They comprise:
 
-- 400 split-sensitivity fits;
-- 400 estimator-seed-sensitivity fits;
+- 120 split-sensitivity fits;
+- 120 estimator-seed-sensitivity fits;
 - 12 preprocessing-sensitivity fits;
 - 192 crossed SGD Logistic fits;
 - 192 crossed Random Forest fits.
@@ -69,7 +69,7 @@ R_0(\varepsilon)
 P(|M-m_0|\le\varepsilon\mid m_0).
 \]
 
-The original reference observation is excluded. With 100 configured runs, there are 99 genuine reruns in the denominator.
+The original reference observation is excluded. With 30 configured runs, there are 29 genuine reruns in the denominator.
 
 The study also reports **pairwise reproducibility**:
 
@@ -159,7 +159,7 @@ The capsule is deterministic and contains:
 - the pinned UCI source URLs and source-byte hashes;
 - the model and preprocessing sets;
 - the primary metric and reproduction tolerances;
-- the exact raw-family fit counts and 1196-fit total;
+- the exact raw-family fit counts and 636-fit total;
 - explicit assertions that Adult source bytes and Adult empirical outputs were absent when capsule construction was authorised.
 
 Capsule construction fails if canonical Adult source files or Adult empirical outputs are already present.
@@ -188,7 +188,9 @@ The command retrieves the remote object and refuses to create the local anchor u
 }
 \]
 
-The supported anchor kinds are `github_release_asset`, `doi_archive_file` and `archive_file`. The URL must use HTTPS.
+The supported anchor kinds are `github_release_asset`, `github_private_release_asset`, `doi_archive_file` and `archive_file`. The URL must use HTTPS.
+
+This study anchors its capsule in a **private** immutable release. That is a deliberate choice with a cost: a capsule only its author can retrieve is not independent evidence that the design predated the data. Every anchor record therefore carries `publicly_retrievable: false`, and verification rejects an anchor whose flag disagrees with its kind. See [Prospective protocol](docs/PROTOCOL.md) for exactly what the private anchor does and does not establish.
 
 A subsequent
 
@@ -231,7 +233,7 @@ run-all
         ↓
 release-status
         ↓
-full independent replay of all 1196 fits
+full independent replay of all 636 fits
         ↓
 finalise-primary-release
 ```

@@ -16,6 +16,7 @@ from ml_reproducibility.anchor import (
     verify_local_capsule,
 )
 from ml_reproducibility.design import freeze_design, verify_design_lock
+from ml_reproducibility.final_lock import build_final_experiment_lock
 
 
 def _copy_adult_design_repo(source: Path, destination: Path) -> Path:
@@ -45,11 +46,12 @@ def test_capsule_binds_locked_adult_design_before_data(tmp_path: Path) -> None:
     source = Path(__file__).resolve().parents[1]
     config = _copy_adult_design_repo(source, tmp_path)
     freeze_design(tmp_path, config)
+    build_final_experiment_lock(tmp_path, config)
 
     capsule = build_preregistration_capsule(tmp_path, config)
     assert verify_local_capsule(tmp_path, config) == capsule
     payload = json.loads(capsule.read_text(encoding="utf-8"))
-    assert payload["expected_raw_fit_count"] == 1196
+    assert payload["expected_raw_fit_count"] == 636
     assert payload["predata_assertions"] == {
         "adult_empirical_outputs_present_when_capsule_built": False,
         "adult_source_bytes_present_when_capsule_built": False,
@@ -78,6 +80,7 @@ def test_remote_anchor_requires_exact_published_capsule(
     source = Path(__file__).resolve().parents[1]
     config = _copy_adult_design_repo(source, tmp_path)
     lock = freeze_design(tmp_path, config)
+    build_final_experiment_lock(tmp_path, config)
     capsule = build_preregistration_capsule(tmp_path, config)
     canonical = capsule.read_bytes()
 
@@ -117,5 +120,127 @@ def test_github_anchor_ref_must_match_release_url() -> None:
                 "https://github.com/example/repo/releases/download/"
                 "v0.4.0/adult_preregistration_capsule.json"
             ),
+            immutable_ref="v9.9.9",
+        )
+
+
+def test_private_release_anchor_records_that_it_is_not_publicly_retrievable(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A private anchor must state its own evidential limit in the provenance record.
+
+    Anyone reading the chain has to be able to tell that the preregistration could not be
+    retrieved by an independent party, because that is what distinguishes it from a public
+    anchor. Leaving it implicit would let a private record read like a public one.
+    """
+
+    source = Path(__file__).resolve().parents[1]
+    config = _copy_adult_design_repo(source, tmp_path)
+    freeze_design(tmp_path, config)
+    build_final_experiment_lock(tmp_path, config)
+    capsule = build_preregistration_capsule(tmp_path, config)
+    canonical = capsule.read_bytes()
+
+    monkeypatch.setattr(
+        anchor_module, "_fetch_private_github_asset", lambda **_: canonical
+    )
+    record_external_anchor(
+        tmp_path,
+        config,
+        kind="github_private_release_asset",
+        url=(
+            "https://api.github.com/repos/example/repo/releases/tags/v0.6.0"
+        ),
+        immutable_ref="v0.6.0",
+        asset_name="adult_preregistration_capsule.json",
+    )
+    payload = json.loads(
+        (tmp_path / "artifacts" / "adult_external_anchor.json").read_text(encoding="utf-8")
+    )
+    assert payload["publicly_retrievable"] is False
+    assert payload["asset_name"] == "adult_preregistration_capsule.json"
+
+    evidence = verify_external_anchor(tmp_path, config, verify_design_lock(tmp_path, config))
+    assert evidence.publicly_retrievable is False
+    assert evidence.as_manifest_payload(tmp_path)["publicly_retrievable"] is False
+
+
+def test_private_anchor_cannot_claim_public_retrievability(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Editing the flag to claim public verifiability must fail verification."""
+
+    source = Path(__file__).resolve().parents[1]
+    config = _copy_adult_design_repo(source, tmp_path)
+    lock = freeze_design(tmp_path, config)
+    build_final_experiment_lock(tmp_path, config)
+    capsule = build_preregistration_capsule(tmp_path, config)
+    canonical = capsule.read_bytes()
+
+    monkeypatch.setattr(
+        anchor_module, "_fetch_private_github_asset", lambda **_: canonical
+    )
+    record_external_anchor(
+        tmp_path,
+        config,
+        kind="github_private_release_asset",
+        url="https://api.github.com/repos/example/repo/releases/tags/v0.6.0",
+        immutable_ref="v0.6.0",
+        asset_name="adult_preregistration_capsule.json",
+    )
+    anchor_path = tmp_path / "artifacts" / "adult_external_anchor.json"
+    payload = json.loads(anchor_path.read_text(encoding="utf-8"))
+    payload["publicly_retrievable"] = True
+    anchor_path.write_bytes(
+        (json.dumps(payload, indent=2, sort_keys=True) + "\n").encode("utf-8")
+    )
+
+    with pytest.raises(ValueError, match="publicly retrievable"):
+        verify_external_anchor(tmp_path, config, lock)
+
+
+def test_private_release_anchor_requires_an_asset_name(tmp_path: Path) -> None:
+    """The private path resolves the asset by name, so the name is mandatory."""
+
+    source = Path(__file__).resolve().parents[1]
+    config = _copy_adult_design_repo(source, tmp_path)
+    freeze_design(tmp_path, config)
+    build_final_experiment_lock(tmp_path, config)
+    build_preregistration_capsule(tmp_path, config)
+
+    with pytest.raises(ValueError, match="asset-name"):
+        record_external_anchor(
+            tmp_path,
+            config,
+            kind="github_private_release_asset",
+            url="https://api.github.com/repos/example/repo/releases/tags/v0.6.0",
+            immutable_ref="v0.6.0",
+        )
+
+
+def test_private_release_anchor_reports_a_missing_token_clearly(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Without credentials the private path cannot run, and must say so."""
+
+    for name in anchor_module.TOKEN_ENVIRONMENT_VARIABLES:
+        monkeypatch.delenv(name, raising=False)
+    with pytest.raises(ValueError, match="requires an API token"):
+        anchor_module._github_token()
+
+
+def test_private_release_url_must_address_the_immutable_tag() -> None:
+    """A private anchor pointing at a moving reference is not an anchor."""
+
+    with pytest.raises(ValueError, match="must point to"):
+        anchor_module._validate_kind_reference(
+            kind="github_private_release_asset",
+            url="https://api.github.com/repos/example/repo/releases/latest",
+            immutable_ref="v0.6.0",
+        )
+    with pytest.raises(ValueError, match="does not match immutable_ref"):
+        anchor_module._validate_kind_reference(
+            kind="github_private_release_asset",
+            url="https://api.github.com/repos/example/repo/releases/tags/v0.6.0",
             immutable_ref="v9.9.9",
         )

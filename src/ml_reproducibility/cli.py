@@ -33,6 +33,7 @@ from .experiment import (
     seed_sensitivity_specs,
     split_sensitivity_specs,
 )
+from .final_lock import build_final_experiment_lock
 from .provenance import write_manifest
 from .release import finalise_primary_release, write_release_status
 from .serialization import write_csv
@@ -176,6 +177,7 @@ def build_parser() -> argparse.ArgumentParser:
     for command, help_text in (
         ("freeze-design", "Create a prospective design lock during design development"),
         ("verify-design-lock", "Verify the existing prospective design lock"),
+        ("build-final-experiment-lock", "Write the complete final scientific specification"),
         ("build-anchor-capsule", "Build the deterministic pre-data preregistration capsule"),
         ("verify-external-anchor", "Verify the published remote preregistration capsule"),
         ("download-data", "Download and verify UCI Adult after the external design anchor"),
@@ -194,6 +196,11 @@ def build_parser() -> argparse.ArgumentParser:
     record.add_argument("--kind", choices=sorted(ALLOWED_EXTERNAL_KINDS), required=True)
     record.add_argument("--url", required=True)
     record.add_argument("--immutable-ref", required=True)
+    record.add_argument(
+        "--asset-name",
+        default=None,
+        help="Release asset filename; required for a private release anchor",
+    )
 
     for command in (
         "split-sensitivity",
@@ -220,6 +227,9 @@ def main() -> None:
     if args.command == "verify-design-lock":
         verify_design_lock(root, config_path)
         return
+    if args.command == "build-final-experiment-lock":
+        build_final_experiment_lock(root, config_path)
+        return
     if args.command == "build-anchor-capsule":
         build_preregistration_capsule(root, config_path)
         return
@@ -230,6 +240,7 @@ def main() -> None:
             kind=args.kind,
             url=args.url,
             immutable_ref=args.immutable_ref,
+            asset_name=args.asset_name,
         )
         return
     if args.command == "verify-external-anchor":

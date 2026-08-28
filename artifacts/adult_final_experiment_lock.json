@@ -1,0 +1,451 @@
+{
+  "config_path": "configs/adult.yml",
+  "config_sha256": "38e00a77351a4f7697dce339af03d40ac8aa175568345d046f4acee4900c4833",
+  "convergence_policy": {
+    "non_convergent_runs_excluded": false,
+    "note": "convergence failure is an observed procedural outcome, not a defect",
+    "recorded": [
+      "converged",
+      "convergence_warning_count",
+      "n_iter"
+    ]
+  },
+  "dataset": {
+    "columns": [
+      "age",
+      "workclass",
+      "fnlwgt",
+      "education",
+      "education_num",
+      "marital_status",
+      "occupation",
+      "relationship",
+      "race",
+      "sex",
+      "capital_gain",
+      "capital_loss",
+      "hours_per_week",
+      "native_country",
+      "income"
+    ],
+    "combination": "adult.data and adult.test concatenated before splitting",
+    "doi": "10.24432/C5XW20",
+    "duplicate_policy": "retained; counts recorded as provenance",
+    "name": "UCI Adult",
+    "source_policy": {
+      "adult.data": {
+        "sha256": "5b00264637dbfec36bdeaab5676b0b309ff9eb788d63554ca0a249491c86603d",
+        "url": "https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data"
+      },
+      "adult.test": {
+        "sha256": "a2a9044bc167a35b2361efbabec64e89d69ce82d9790d2980119aac5fd7e9c05",
+        "url": "https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.test"
+      }
+    },
+    "target": "income, mapped {<=50K: 0, >50K: 1}"
+  },
+  "design_lock": {
+    "config": "configs/adult.yml",
+    "dataset": "adult",
+    "files_sha256": {
+      "configs/adult.yml": "38e00a77351a4f7697dce339af03d40ac8aa175568345d046f4acee4900c4833",
+      "docs/PROTOCOL.md": "14ab96546e43140f92a2852d4973f8ee711d1fb97edfb01ad1a975e2fc3ca3c1",
+      "docs/STUDY_DESIGN.md": "a86150337a63ccbf21e97826a42cb05a70dc9add5d494371b6d02ef8b0fb2182",
+      "environment/requirements.lock.txt": "c29a011ce4b4033cd52fc927e8430e6114960a71c172c5dcca5e990dc5c1dcee",
+      "environment/runtime-policy.json": "7d40672f41d87b20b6c260c4fc090f19bb296b58206fae68565296d8d9c0cd86",
+      "pyproject.toml": "b9491793c5798fe7e0edb33f4f3432782c175b9a7fee2b540301f80b199d89d3",
+      "src/ml_reproducibility/__init__.py": "038981864fa9d1584495cbb6469807511d4daf0e0661181b529f9f5cda119e38",
+      "src/ml_reproducibility/analysis.py": "80efee159372d0c1b38f2975da5c1694a441356d7ad5fd1f960264e381632d7d",
+      "src/ml_reproducibility/anchor.py": "80b703c2ae8e1ae00d14c959763f2365131fb2f5c1c7f7d25a46b03c7c082b90",
+      "src/ml_reproducibility/cli.py": "431a8e911cfe2433800aecec97bd71b95c95874fece7d7eb9d72eaa4946db635",
+      "src/ml_reproducibility/config.py": "357d2320dd3ec3a87122d096fe9050638c04e3c69e2f1155ed62f0b4837cca50",
+      "src/ml_reproducibility/data.py": "09854a63556131011e3364fc113fa945cffaa6bd82a335bb2fc26552ca3ac1d8",
+      "src/ml_reproducibility/design.py": "bcb86575538d7ac913feeadb0d0a2077f0a03aa1c5c8263054f90525046f622a",
+      "src/ml_reproducibility/experiment.py": "aff296d6379eaa579be08c8d2e1809e97d9aa3b948a38a2eeb915391b437503d",
+      "src/ml_reproducibility/final_lock.py": "0a8fab52dde6df068aac4d0c309575c6cfe3c801001f3eb954701c1ac90638c4",
+      "src/ml_reproducibility/metrics.py": "7c027ed46cd5fa7a6a3d66ff9e892d04179f84abbd4d5c59a24430a7b8b5ba4b",
+      "src/ml_reproducibility/models.py": "1d0b1cb63b713bc76e349cc2145f9cb549887a3dae359328c53c78ad6f4c1321",
+      "src/ml_reproducibility/preprocessing.py": "a2975e58aa8ec093c1b5e16d1b002b508dcdf03c04d382f83883d9b4af7c14db",
+      "src/ml_reproducibility/provenance.py": "d8b61417baeb137be150b0f389a884e3d87d7b3818152b093239eb7715e77a35",
+      "src/ml_reproducibility/release.py": "aa04b7f66cc648c630e97a734c6ffbb1270a06ce179fd46f5e6655504c215429",
+      "src/ml_reproducibility/serialization.py": "43015da0c3c9e1543797489307419413511fe3474dacb0385921a78bd248f00e"
+    },
+    "lock_schema": 2
+  },
+  "design_lock_path": "artifacts/adult_design_lock.json",
+  "design_lock_sha256": "2eb2351f4ae40971a5428c7aa6bbf3f906826ade0f99054abd56e03e3275d7d9",
+  "expected_raw_fit_count": 636,
+  "final_lock_schema": 1,
+  "grids": {
+    "factorial": {
+      "model_seeds": [
+        2718,
+        2719,
+        2720,
+        2721,
+        2722,
+        2723,
+        2724,
+        2725
+      ],
+      "models": [
+        "sgd_logistic",
+        "random_forest"
+      ],
+      "n_fits": 384,
+      "preprocessing": [
+        "standard",
+        "robust",
+        "none"
+      ],
+      "split_seeds": [
+        1729,
+        1730,
+        1731,
+        1732,
+        1733,
+        1734,
+        1735,
+        1736
+      ]
+    },
+    "preprocessing_sensitivity": {
+      "model_seed": 2718,
+      "models": [
+        "logistic",
+        "linear_svm",
+        "random_forest",
+        "sgd_logistic"
+      ],
+      "n_fits": 12,
+      "preprocessing": [
+        "standard",
+        "robust",
+        "none"
+      ],
+      "split_seed": 1729
+    },
+    "seed_sensitivity": {
+      "model_seeds": [
+        2718,
+        2719,
+        2720,
+        2721,
+        2722,
+        2723,
+        2724,
+        2725,
+        2726,
+        2727,
+        2728,
+        2729,
+        2730,
+        2731,
+        2732,
+        2733,
+        2734,
+        2735,
+        2736,
+        2737,
+        2738,
+        2739,
+        2740,
+        2741,
+        2742,
+        2743,
+        2744,
+        2745,
+        2746,
+        2747
+      ],
+      "models": [
+        "logistic",
+        "linear_svm",
+        "random_forest",
+        "sgd_logistic"
+      ],
+      "n_fits": 120,
+      "preprocessing": "standard",
+      "split_seed": 1729
+    },
+    "split_sensitivity": {
+      "model_seed": 2718,
+      "models": [
+        "logistic",
+        "linear_svm",
+        "random_forest",
+        "sgd_logistic"
+      ],
+      "n_fits": 120,
+      "preprocessing": "standard",
+      "split_seeds": [
+        1729,
+        1730,
+        1731,
+        1732,
+        1733,
+        1734,
+        1735,
+        1736,
+        1737,
+        1738,
+        1739,
+        1740,
+        1741,
+        1742,
+        1743,
+        1744,
+        1745,
+        1746,
+        1747,
+        1748,
+        1749,
+        1750,
+        1751,
+        1752,
+        1753,
+        1754,
+        1755,
+        1756,
+        1757,
+        1758
+      ]
+    }
+  },
+  "metrics": {
+    "csv_precision": "%.12g",
+    "primary": "roc_auc",
+    "ranking_score_policy": "decision_function when the estimator provides one, otherwise the positive-class probability; ROC-AUC is a rank statistic and the margin is the quantity the estimator ranks by",
+    "secondary": [
+      "accuracy",
+      "balanced_accuracy",
+      "f1"
+    ]
+  },
+  "models": {
+    "linear_svm": {
+      "estimator_class": "sklearn.svm._classes.LinearSVC",
+      "hyperparameters": {
+        "C": 1.0,
+        "class_weight": null,
+        "dual": "auto",
+        "fit_intercept": true,
+        "intercept_scaling": 1,
+        "loss": "squared_hinge",
+        "max_iter": 5000,
+        "multi_class": "ovr",
+        "penalty": "l2",
+        "random_state": 0,
+        "tol": 0.0001,
+        "verbose": 0
+      },
+      "responds_to_model_seed": false,
+      "role": "low-randomness control"
+    },
+    "logistic": {
+      "estimator_class": "sklearn.linear_model._logistic.LogisticRegression",
+      "hyperparameters": {
+        "C": 1.0,
+        "class_weight": null,
+        "dual": false,
+        "fit_intercept": true,
+        "intercept_scaling": 1,
+        "l1_ratio": 0.0,
+        "max_iter": 2000,
+        "n_jobs": null,
+        "penalty": "deprecated",
+        "random_state": null,
+        "solver": "newton-cholesky",
+        "tol": 0.0001,
+        "verbose": 0,
+        "warm_start": false
+      },
+      "responds_to_model_seed": false,
+      "role": "low-randomness control"
+    },
+    "random_forest": {
+      "estimator_class": "sklearn.ensemble._forest.RandomForestClassifier",
+      "hyperparameters": {
+        "bootstrap": true,
+        "ccp_alpha": 0.0,
+        "class_weight": null,
+        "criterion": "gini",
+        "max_depth": null,
+        "max_features": "sqrt",
+        "max_leaf_nodes": null,
+        "max_samples": null,
+        "min_impurity_decrease": 0.0,
+        "min_samples_leaf": 2,
+        "min_samples_split": 2,
+        "min_weight_fraction_leaf": 0.0,
+        "monotonic_cst": null,
+        "n_estimators": 250,
+        "n_jobs": 1,
+        "oob_score": false,
+        "random_state": "<model_seed from the declared grid>",
+        "verbose": 0,
+        "warm_start": false
+      },
+      "responds_to_model_seed": true,
+      "role": "stochastic estimator"
+    },
+    "sgd_logistic": {
+      "estimator_class": "sklearn.linear_model._stochastic_gradient.SGDClassifier",
+      "hyperparameters": {
+        "alpha": 0.0001,
+        "average": false,
+        "class_weight": null,
+        "early_stopping": false,
+        "epsilon": 0.1,
+        "eta0": 0.01,
+        "fit_intercept": true,
+        "l1_ratio": 0.15,
+        "learning_rate": "optimal",
+        "loss": "log_loss",
+        "max_iter": 2000,
+        "n_iter_no_change": 5,
+        "n_jobs": null,
+        "penalty": "l2",
+        "power_t": 0.5,
+        "random_state": "<model_seed from the declared grid>",
+        "shuffle": true,
+        "tol": 0.0001,
+        "validation_fraction": 0.1,
+        "verbose": 0,
+        "warm_start": false
+      },
+      "responds_to_model_seed": true,
+      "role": "stochastic estimator"
+    }
+  },
+  "preprocessing": {
+    "none": {
+      "categorical_encoding": "sklearn.preprocessing.OneHotEncoder(handle_unknown='ignore')",
+      "categorical_imputation": "most_frequent (sklearn.impute.SimpleImputer)",
+      "fitted_inside_pipeline": true,
+      "numeric_imputation": "median (sklearn.impute.SimpleImputer)",
+      "numeric_scaler": null
+    },
+    "robust": {
+      "categorical_encoding": "sklearn.preprocessing.OneHotEncoder(handle_unknown='ignore')",
+      "categorical_imputation": "most_frequent (sklearn.impute.SimpleImputer)",
+      "fitted_inside_pipeline": true,
+      "numeric_imputation": "median (sklearn.impute.SimpleImputer)",
+      "numeric_scaler": "sklearn.preprocessing.RobustScaler"
+    },
+    "standard": {
+      "categorical_encoding": "sklearn.preprocessing.OneHotEncoder(handle_unknown='ignore')",
+      "categorical_imputation": "most_frequent (sklearn.impute.SimpleImputer)",
+      "fitted_inside_pipeline": true,
+      "numeric_imputation": "median (sklearn.impute.SimpleImputer)",
+      "numeric_scaler": "sklearn.preprocessing.StandardScaler"
+    }
+  },
+  "raw_family_fit_counts": {
+    "factorial": 384,
+    "preprocessing_sensitivity": 12,
+    "seed_sensitivity": 120,
+    "split_sensitivity": 120
+  },
+  "release_gate_policy": {
+    "checks": [
+      "design_lock",
+      "reference_environment",
+      "external_anchor",
+      "dataset",
+      "raw_split_sensitivity",
+      "raw_seed_sensitivity",
+      "raw_preprocessing_sensitivity",
+      "raw_factorial",
+      "environment_consistency",
+      "analysis_manifest",
+      "baseline_consistency",
+      "deterministic_controls",
+      "derived_tables",
+      "full_empirical_replay"
+    ],
+    "gate_may_not_be_weakened_after_seeing_results": true,
+    "requirement": "every configured raw fit is independently reconstructed; metrics must agree to the stored 12-significant-digit precision and behavioural signatures, score diagnostics and convergence outcomes must agree exactly"
+  },
+  "reproducibility": {
+    "behavioural": {
+      "compared_only_when_test_set_fixed": [
+        "seed_sensitivity",
+        "preprocessing_sensitivity"
+      ],
+      "signatures": [
+        "prediction_sha256",
+        "score_sha256"
+      ]
+    },
+    "pairwise": {
+      "definition": "P(|M1 - M2| <= eps) over all unordered pairs of runs",
+      "interval": "95% delete-one-run jackknife; pairs are dependent"
+    },
+    "procedure_stability": {
+      "definition": "fraction of declared alternative procedures within tolerance",
+      "interval": null,
+      "note": "a finite enumeration, not a sampling distribution"
+    },
+    "reference_conditioned": {
+      "definition": "P(|M - m0| <= eps | m0), reference excluded from numerator and denominator",
+      "interval": "95% Wilson score"
+    },
+    "reference_specification": {
+      "model_seed": 2718,
+      "preprocessing": "standard",
+      "split_seed": 1729
+    },
+    "tolerances": [
+      0.001,
+      0.005,
+      0.01
+    ]
+  },
+  "runtime_requirements": {
+    "canonical_blas_internal_api": "openblas",
+    "canonical_platform_system": "Linux",
+    "n_jobs": 1,
+    "numeric_threads": 1,
+    "platform_binding": "Aggregate metrics and every derived analysis table are portable across operating systems. The per-fit prediction and score SHA-256 signatures are not: they depend on the BLAS build, so full_empirical_replay reproduces exactly only on the declared canonical platform. Verification on another platform is expected to reproduce all derived tables byte-for-byte while differing in continuous-score signatures.",
+    "policy": "Canonical primary execution uses one estimator job and threadpoolctl-enforced single-thread numerical kernels.",
+    "python_version": "3.13.5",
+    "serialization": "All scientific CSV and JSON artifacts are written with LF newlines through ml_reproducibility.serialization so that byte identity is a property of the experiment rather than of the host operating system."
+  },
+  "score_diagnostics": {
+    "rationale": "score collapse and margin explosion emit no convergence warning; recording them makes such a failure observable",
+    "recorded": [
+      "score_kind",
+      "n_unique_scores",
+      "score_abs_median"
+    ]
+  },
+  "software_version": "0.7.0",
+  "statistical_analysis": {
+    "anova_model": "metric ~ C(split_seed) + C(model_seed) + C(preprocessing) + all two-way interactions; residual is the unmodelled three-way interaction",
+    "derived_tables": [
+      "split_summary",
+      "seed_summary",
+      "preprocessing_summary",
+      "reproducibility_drift",
+      "reference_reproducibility_curve",
+      "pairwise_reproducibility_curve",
+      "procedure_stability",
+      "conditional_split_seed_variability",
+      "behavioural_reference_match",
+      "factorial_anova_roc_auc",
+      "convergence_summary"
+    ],
+    "f_and_p_values_reported": false,
+    "variance_decomposition": "descriptive Type II ANOVA sums of squares on the balanced crossed design, per factorial model"
+  },
+  "status": "final prospective specification; no primary results observed",
+  "study": "ml-reproducibility-experiment",
+  "train_test_procedure": {
+    "method": "repeated stratified hold-out",
+    "split_controlled_by": "split_seed",
+    "splitter": "sklearn.model_selection.train_test_split",
+    "stratified_on_target": true,
+    "test_size": 0.25
+  }
+}

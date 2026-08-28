@@ -8,7 +8,7 @@
     "name": "scikit-learn breast_cancer smoke dataset"
   },
   "design_lock_path": "artifacts/smoke_design_lock.json",
-  "design_lock_sha256": "f501a6830e6518ca1a183cf427b8a62bb759d43462dc8d54922a611b85cf57fb",
+  "design_lock_sha256": "8c97041676072e89d1b0a89690baed579b42dc3d5d3f09c006893c1b375d8bce",
   "environment": {
     "machine": "x86_64",
     "packages": {
@@ -68,7 +68,7 @@
     "numeric_threads": 1
   },
   "experiment": "analysis",
-  "manifest_payload_sha256": "7efa4613812d9f65d7d6b8d993aac9fc9312c4b02b97c825f10966c6c6570956",
+  "manifest_payload_sha256": "8eaf44c625f209be720c41fe6b645c587fffb581e3f9153ec8d0a4b8ff4b4ec9",
   "outputs_sha256": {
     "results/smoke/behavioural_reference_match.csv": "e998e930ea6f5459c59603b6af4b3e65517ba63449240a60e3eaed0470642275",
     "results/smoke/conditional_split_seed_variability.csv": "7f7f26aa3e3cdb43186001997cb35eed567724cc7d2bd57fa5a1c3bc3737380d",

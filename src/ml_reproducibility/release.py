@@ -7,7 +7,7 @@ import json
 import math
 import platform
 import tempfile
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
@@ -159,10 +159,11 @@ def _verify_manifest(
     root: Path,
     config_path: Path,
     lock_path: Path,
-    result_path: Path,
+    result_paths: Sequence[Path],
     manifest_path: Path,
     cfg: ExperimentConfig,
     expected_external_anchor: dict[str, object] | None = None,
+    expected_dataset: dict[str, object] | None = None,
 ) -> str:
     """Verify one raw result's provenance manifest and return its environment identity."""
 
@@ -175,8 +176,11 @@ def _verify_manifest(
     outputs = payload.get("outputs_sha256")
     if not isinstance(outputs, dict):
         raise TypeError(f"outputs_sha256 is not a mapping in {manifest_path.name}")
-    relative_result = result_path.resolve().relative_to(root.resolve()).as_posix()
-    if outputs.get(relative_result) != sha256_path(result_path):
+    expected_outputs = {
+        path.resolve().relative_to(root.resolve()).as_posix(): sha256_path(path)
+        for path in result_paths
+    }
+    if outputs != expected_outputs:
         raise ValueError(f"Output hash mismatch in {manifest_path.name}")
 
     if expected_external_anchor is not None:
@@ -184,6 +188,12 @@ def _verify_manifest(
             raise ValueError(f"External-anchor binding mismatch in {manifest_path.name}")
     elif "external_anchor" in payload:
         raise ValueError(f"Unexpected external-anchor binding in {manifest_path.name}")
+
+    # The manifest states which data produced the results. Without this comparison that
+    # claim is unverified: the gate would confirm the data on disk and the numbers derived
+    # from it, while the record tying one to the other could say anything.
+    if expected_dataset is not None and payload.get("dataset") != expected_dataset:
+        raise ValueError(f"Dataset provenance mismatch in {manifest_path.name}")
 
     policy = payload.get("execution_policy")
     expected_policy = {"n_jobs": cfg.n_jobs, "numeric_threads": cfg.numeric_threads}
@@ -217,6 +227,7 @@ def _verify_raw_family(
     name: str,
     factory: Callable[[ExperimentConfig], list[RunSpec]],
     expected_external_anchor: dict[str, object] | None = None,
+    expected_dataset: dict[str, object] | None = None,
 ) -> tuple[pd.DataFrame, str]:
     """Verify rows, metrics, diagnostics, signatures and manifest for one result family."""
 
@@ -288,12 +299,57 @@ def _verify_raw_family(
         root=root,
         config_path=config_path,
         lock_path=lock_path,
-        result_path=result_path,
+        result_paths=[result_path],
         manifest_path=manifest_path,
         cfg=cfg,
         expected_external_anchor=expected_external_anchor,
+        expected_dataset=expected_dataset,
     )
     return frame, environment_hash
+
+
+def _verify_analysis_manifest(
+    *,
+    root: Path,
+    result_dir: Path,
+    config_path: Path,
+    lock_path: Path,
+    cfg: ExperimentConfig,
+    raw_environment_hash: str,
+    expected_external_anchor: dict[str, object] | None = None,
+    expected_dataset: dict[str, object] | None = None,
+) -> None:
+    """Verify the manifest that binds the derived tables to the design and the anchor.
+
+    The derived tables are independently recomputed elsewhere in the gate, so their values
+    are already protected. What this covers is the manifest itself: the record asserting
+    which design, which dataset provenance and which external anchor those tables came
+    from. Leaving it unverified would let the provenance claim be rewritten even though the
+    numbers it points at are sound.
+    """
+
+    manifest_path = result_dir / "analysis.manifest.json"
+    if not manifest_path.exists():
+        raise FileNotFoundError(f"Missing analysis manifest: {manifest_path}")
+    derived_paths = [result_dir / f"{name}.csv" for name in DERIVED_TABLES]
+    missing = [path.name for path in derived_paths if not path.exists()]
+    if missing:
+        raise FileNotFoundError(f"Analysis manifest cannot be verified; missing: {missing}")
+
+    environment_hash = _verify_manifest(
+        root=root,
+        config_path=config_path,
+        lock_path=lock_path,
+        result_paths=derived_paths,
+        manifest_path=manifest_path,
+        cfg=cfg,
+        expected_external_anchor=expected_external_anchor,
+        expected_dataset=expected_dataset,
+    )
+    if environment_hash != raw_environment_hash:
+        raise ValueError(
+            "Analysis manifest was produced in a different environment from the raw results"
+        )
 
 
 def _verify_baseline_consistency(
@@ -505,6 +561,20 @@ def evaluate_release(
     except Exception as exc:  # noqa: BLE001
         checks.append(GateCheck("dataset", False, str(exc)))
 
+    expected_dataset: dict[str, object] | None = None
+    try:
+        expected_dataset = load_dataset(
+            cfg.dataset,
+            raw_dir=root / "data" / "raw",
+            expected_external_anchor=(
+                anchor_evidence.as_manifest_payload(root)
+                if anchor_evidence is not None
+                else None
+            ),
+        ).provenance
+    except Exception:  # noqa: BLE001 - absence is already reported by the dataset check
+        expected_dataset = None
+
     environment_hashes: set[str] = set()
     for name, factory in RAW_FAMILIES.items():
         try:
@@ -521,6 +591,7 @@ def evaluate_release(
                     if anchor_evidence is not None
                     else None
                 ),
+                expected_dataset=expected_dataset,
             )
             frames[name] = frame
             environment_hashes.add(environment_hash)
@@ -536,7 +607,25 @@ def evaluate_release(
         except Exception as exc:  # noqa: BLE001
             checks.append(GateCheck("environment_consistency", False, str(exc)))
 
+        raw_environment_hash = next(iter(environment_hashes))
         validators: tuple[tuple[str, Callable[[], None]], ...] = (
+            (
+                "analysis_manifest",
+                lambda: _verify_analysis_manifest(
+                    root=root,
+                    result_dir=result_dir,
+                    config_path=config_path,
+                    lock_path=lock_path,
+                    cfg=cfg,
+                    raw_environment_hash=raw_environment_hash,
+                    expected_external_anchor=(
+                        anchor_evidence.as_manifest_payload(root)
+                        if anchor_evidence is not None
+                        else None
+                    ),
+                    expected_dataset=expected_dataset,
+                ),
+            ),
             ("baseline_consistency", lambda: _verify_baseline_consistency(frames, cfg)),
             (
                 "deterministic_controls",

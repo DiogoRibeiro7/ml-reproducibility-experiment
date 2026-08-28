@@ -41,10 +41,10 @@ Categorical predictors use most-frequent imputation and one-hot encoding. `stand
 
 ## Experiment A: split sensitivity
 
-For every model, hold estimator seed and preprocessing fixed and vary only the stratified train/test split across 100 seeds:
+For every model, hold estimator seed and preprocessing fixed and vary only the stratified train/test split across 30 seeds:
 
 \[
-s\in\{1729,\ldots,1828\}.
+s\in\{1729,\ldots,1758\}.
 \]
 
 The reference split is 1729. It is **not** counted as a successful reproduction of itself.
@@ -53,10 +53,10 @@ Changing the split seed changes the training set and the test set together, so t
 
 ## Experiment B: estimator-seed sensitivity
 
-Hold the split and preprocessing fixed and vary the estimator random state across 100 seeds:
+Hold the split and preprocessing fixed and vary the estimator random state across 30 seeds:
 
 \[
-r\in\{2718,\ldots,2817\}.
+r\in\{2718,\ldots,2747\}.
 \]
 
 The reference model seed is 2718. It is excluded from the reference-conditioned reproduction denominator.
@@ -114,7 +114,7 @@ R_{0}(\varepsilon)
 P\left(|M-m_0|\leq\varepsilon\mid m_0\right).
 \]
 
-The original reference observation is excluded. With 100 configured runs, the denominator is therefore 99 genuine reruns.
+The original reference observation is excluded. With 30 configured runs, the denominator is therefore 29 genuine reruns.
 
 The fixed ROC-AUC tolerances are
 
@@ -149,23 +149,33 @@ For \(R_{\mathrm{pair}}(\varepsilon)\) the pairs are **not** independent: each r
 overstate precision. The interval is a delete-one-**run** jackknife, which resamples the
 unit that actually varies.
 
-The repetition count follows from this. At 30 configured runs the worst-case half-width of
-the 95% interval is 0.171, wide enough that a rate of 0.35 and a rate of 0.65 are not
-distinguishable. At 100 configured runs it is 0.097:
+### Declared precision limit
+
+The design uses 30 split repetitions and 30 estimator-seed repetitions, giving 29 genuine
+reruns per model and family. This is a deliberate, cost-constrained choice, and it is
+declared here rather than discovered afterwards:
 
 | configured runs | genuine reruns | worst-case 95% half-width |
 |---|---|---|
-| 30 | 29 | 0.171 |
+| **30 (this design)** | **29** | **0.171** |
 | 100 | 99 | 0.097 |
 
-The design therefore uses 100 split repetitions and 100 estimator-seed repetitions. The
-cost is concentrated almost entirely in the random forest, whose fits dominate runtime; the
-remaining estimators are cheap enough that the increase is negligible for them.
+At 29 reruns a reproduction rate of 0.35 and one of 0.65 are not statistically
+distinguishable. **The study therefore does not claim to resolve moderate differences in
+reproduction rate between models or between factors.** Its resolvable claims are the coarse
+ones: whether a rate is near 1, near 0, or somewhere in between, and how those coarse
+positions move with the tolerance \(\varepsilon\). Every reported rate carries its interval so
+a reader can apply that limit directly.
+
+The binding constraint is compute. The random forest costs roughly two minutes per fit
+under the single-threaded execution policy and accounts for almost all of the study's
+runtime; raising repetitions to 100 would more than double it. Reducing the forest's tree
+count would be the obvious saving and is deliberately **not** taken, because the number of
+trees directly damps estimator-seed variance, which is one of the quantities under study.
 
 Procedure stability is **not** given an interval. It is a fraction over a finite declared
 set of procedures, not an estimate of a population quantity, and attaching sampling
 uncertainty to a complete enumeration would misrepresent it.
-
 
 ## Behavioural reproduction
 
@@ -266,6 +276,11 @@ The primary design is externally anchored through a deterministic preregistratio
 
 Capsule construction is permitted only while canonical Adult source bytes and Adult empirical outputs are absent. The exact capsule bytes must then be published externally and retrieved back over HTTPS before data acquisition is authorised. Adult acquisition receipts and all subsequent empirical manifests bind the verified anchor identity.
 
+The capsule for this study is anchored in a **private** immutable release, so the anchor is
+a self-binding prospectivity control rather than an externally verifiable preregistration.
+`docs/PROTOCOL.md` states precisely what that does and does not establish, and every anchor
+record carries `publicly_retrievable: false`.
+
 This separates three claims that are often conflated:
 
 \[
@@ -281,13 +296,13 @@ This separates three claims that are often conflated:
 The Adult study contains:
 
 \[
-4\times100=400
+4\times30=120
 \]
 
 split-sensitivity fits,
 
 \[
-4\times100=400
+4\times30=120
 \]
 
 seed-sensitivity fits,
@@ -307,7 +322,7 @@ crossed-factorial fits.
 The total is therefore
 
 \[
-\boxed{1196\ \text{primary model fits}}.
+\boxed{636\ \text{primary model fits}}.
 \]
 
 No configured run may be removed because it is slow, inconvenient, unusually strong, unusually weak, or fails to converge.
