@@ -1,0 +1,11 @@
+{
+  "asset_name": "adult_preregistration_capsule.json",
+  "capsule_sha256": "8d791b1626d524822c0f72c7190353dcf5553cdee3918b57a81d89d33a06c0be",
+  "design_lock_sha256": "2eb2351f4ae40971a5428c7aa6bbf3f906826ade0f99054abd56e03e3275d7d9",
+  "immutable_ref": "v0.7.0",
+  "kind": "github_private_release_asset",
+  "publicly_retrievable": false,
+  "remote_capsule_sha256": "8d791b1626d524822c0f72c7190353dcf5553cdee3918b57a81d89d33a06c0be",
+  "schema": 3,
+  "url": "https://api.github.com/repos/DiogoRibeiro7/ml-reproducibility-experiment/releases/tags/v0.7.0"
+}

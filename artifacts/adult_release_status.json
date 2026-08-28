@@ -11,12 +11,12 @@
       "passed": true
     },
     {
-      "detail": "Missing external prospective anchor: /work/artifacts/adult_external_anchor.json. Publish the preregistration capsule before retrieving Adult data.",
+      "detail": "remote preregistration capsule matches the prospectively locked design",
       "name": "external_anchor",
-      "passed": false
+      "passed": true
     },
     {
-      "detail": "Adult dataset receipt cannot be verified without the external anchor",
+      "detail": "Missing canonical Adult source file: C:\\Users\\diogo\\work_code\\ml-reproducibility-experiment\\data\\raw\\adult.data",
       "name": "dataset",
       "passed": false
     },
