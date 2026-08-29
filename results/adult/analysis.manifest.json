@@ -1,0 +1,126 @@
+{
+  "config_path": "configs/adult.yml",
+  "config_sha256": "38e00a77351a4f7697dce339af03d40ac8aa175568345d046f4acee4900c4833",
+  "dataset": {
+    "acquisition_receipt": {
+      "dataset": "UCI Adult",
+      "doi": "10.24432/C5XW20",
+      "external_anchor": {
+        "anchor_path": "artifacts/adult_external_anchor.json",
+        "anchor_sha256": "e2c65f00eee0f34b7f6939e7ed3ca740b1d48f977cb4815b0c20e1f718f6f8aa",
+        "asset_name": "adult_preregistration_capsule.json",
+        "capsule_path": "artifacts/adult_preregistration_capsule.json",
+        "capsule_sha256": "8d791b1626d524822c0f72c7190353dcf5553cdee3918b57a81d89d33a06c0be",
+        "immutable_ref": "v0.7.0",
+        "kind": "github_private_release_asset",
+        "publicly_retrievable": false,
+        "remote_capsule_sha256": "8d791b1626d524822c0f72c7190353dcf5553cdee3918b57a81d89d33a06c0be",
+        "url": "https://api.github.com/repos/DiogoRibeiro7/ml-reproducibility-experiment/releases/tags/v0.7.0"
+      },
+      "files": {
+        "adult.data": "5b00264637dbfec36bdeaab5676b0b309ff9eb788d63554ca0a249491c86603d",
+        "adult.test": "a2a9044bc167a35b2361efbabec64e89d69ce82d9790d2980119aac5fd7e9c05"
+      },
+      "retrieved_at_utc": "2026-08-28T17:59:48.303218+00:00",
+      "schema": 2
+    },
+    "doi": "10.24432/C5XW20",
+    "duplicate_policy": "retained",
+    "n_duplicate_feature_rows": 57,
+    "n_duplicate_labelled_rows": 52,
+    "n_features": 14,
+    "n_rows": 48842,
+    "name": "UCI Adult",
+    "raw_sha256": {
+      "adult.data": "5b00264637dbfec36bdeaab5676b0b309ff9eb788d63554ca0a249491c86603d",
+      "adult.test": "a2a9044bc167a35b2361efbabec64e89d69ce82d9790d2980119aac5fd7e9c05"
+    }
+  },
+  "design_lock_path": "artifacts/adult_design_lock.json",
+  "design_lock_sha256": "2eb2351f4ae40971a5428c7aa6bbf3f906826ade0f99054abd56e03e3275d7d9",
+  "environment": {
+    "machine": "x86_64",
+    "packages": {
+      "PyYAML": "6.0.3",
+      "joblib": "1.5.3",
+      "matplotlib": "3.10.8",
+      "numpy": "2.3.5",
+      "pandas": "2.2.3",
+      "patsy": "1.0.2",
+      "scikit-learn": "1.8.0",
+      "scipy": "1.17.0",
+      "statsmodels": "0.14.6",
+      "threadpoolctl": "3.6.0"
+    },
+    "platform_release": "6.6.87.2-microsoft-standard-WSL2",
+    "platform_system": "Linux",
+    "processor": "",
+    "python_executable": "/usr/local/bin/python",
+    "python_implementation": "CPython",
+    "python_version": "3.13.5",
+    "thread_environment": {
+      "MKL_NUM_THREADS": null,
+      "NUMEXPR_NUM_THREADS": null,
+      "OMP_NUM_THREADS": null,
+      "OPENBLAS_NUM_THREADS": null
+    },
+    "threadpools": [
+      {
+        "architecture": "Haswell",
+        "internal_api": "openblas",
+        "num_threads": 22,
+        "threading_layer": "pthreads",
+        "user_api": "blas",
+        "version": "0.3.30"
+      },
+      {
+        "architecture": "Haswell",
+        "internal_api": "openblas",
+        "num_threads": 22,
+        "threading_layer": "pthreads",
+        "user_api": "blas",
+        "version": "0.3.30"
+      },
+      {
+        "architecture": null,
+        "internal_api": "openmp",
+        "num_threads": 22,
+        "threading_layer": null,
+        "user_api": "openmp",
+        "version": null
+      }
+    ]
+  },
+  "environment_sha256": "c14cc420463715659168dec7058de3c10a3d24fe6fc1a2003869102f1209e23a",
+  "execution_policy": {
+    "n_jobs": 1,
+    "numeric_threads": 1
+  },
+  "experiment": "analysis",
+  "external_anchor": {
+    "anchor_path": "artifacts/adult_external_anchor.json",
+    "anchor_sha256": "e2c65f00eee0f34b7f6939e7ed3ca740b1d48f977cb4815b0c20e1f718f6f8aa",
+    "asset_name": "adult_preregistration_capsule.json",
+    "capsule_path": "artifacts/adult_preregistration_capsule.json",
+    "capsule_sha256": "8d791b1626d524822c0f72c7190353dcf5553cdee3918b57a81d89d33a06c0be",
+    "immutable_ref": "v0.7.0",
+    "kind": "github_private_release_asset",
+    "publicly_retrievable": false,
+    "remote_capsule_sha256": "8d791b1626d524822c0f72c7190353dcf5553cdee3918b57a81d89d33a06c0be",
+    "url": "https://api.github.com/repos/DiogoRibeiro7/ml-reproducibility-experiment/releases/tags/v0.7.0"
+  },
+  "manifest_payload_sha256": "c2d00b82be4f460b6f09910eefc880293eec30f65778f0bdb372abecbed684a8",
+  "outputs_sha256": {
+    "results/adult/behavioural_reference_match.csv": "1022a9811984abe081566410713cc252cdf752bb779492972a08447112d1a61c",
+    "results/adult/conditional_split_seed_variability.csv": "a0ddfbd529c3f386a97dea3ad13a0f86f21a23d84e92cb342199538093b96dd9",
+    "results/adult/convergence_summary.csv": "4c10ebd4fb75ce671bb33895febc13e4488eda8d3872f03b0b62a210a0fb3567",
+    "results/adult/factorial_anova_roc_auc.csv": "23fd9cc4fc20eccca86961dade9aba9ae668ed1cbfa6bf93308dfd3d3c20c4d2",
+    "results/adult/pairwise_reproducibility_curve.csv": "2229ef6bd9413e8b78274875530c3a89b20ecc1d2d1a380d0f8e9a113b7dd869",
+    "results/adult/preprocessing_summary.csv": "084507a288c37549c573f916e1afcae626c5f9d268583693861f9db5cc655f5d",
+    "results/adult/procedure_stability.csv": "3386ca09fc2e4f0a42226607ed6a3271e4eb5975dacb01101e3f9852ae7f1604",
+    "results/adult/reference_reproducibility_curve.csv": "444e3a5802eaba34c053f13885640b5a3d90f0ec5e701828abdbef13f8936a49",
+    "results/adult/reproducibility_drift.csv": "f0bf3a93ad80dd0cc8f275960339d8838ca4d1ee17382933289cf2798af4b31b",
+    "results/adult/seed_summary.csv": "fd0e4c5e751bee89ff0348fa3b656ce12d2536ef074490bc9800da8504fb261b",
+    "results/adult/split_summary.csv": "caca8c2c569566dbca0b6290fb74867ba7339f9522179abbb6aba7227f7ece3b"
+  }
+}

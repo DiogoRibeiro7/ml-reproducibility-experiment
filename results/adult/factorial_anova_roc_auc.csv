@@ -1,0 +1,15 @@
+model,source,sum_sq,df,share_total_ss
+random_forest,C(split_seed),0.00066820169497,7,0.98902319943
+random_forest,C(model_seed),9.93876395073e-07,7,0.00147106303305
+random_forest,C(preprocessing),2.10387739225e-09,2,3.11400519537e-06
+random_forest,C(split_seed):C(model_seed),6.39883976195e-06,49,0.00947109386527
+random_forest,C(split_seed):C(preprocessing),6.91850203368e-09,14,1.02402598918e-05
+random_forest,C(model_seed):C(preprocessing),1.1861858783e-09,14,1.75570544239e-06
+random_forest,Residual,1.31973165091e-08,98,1.95337011205e-05
+sgd_logistic,C(split_seed),0.0162440104979,7,0.00485894780209
+sgd_logistic,C(model_seed),0.0267576889762,7,0.00800382479786
+sgd_logistic,C(preprocessing),2.91369685248,2,0.871552066475
+sgd_logistic,C(split_seed):C(model_seed),0.103662316085,49,0.0310077233061
+sgd_logistic,C(split_seed):C(preprocessing),0.0217828458912,14,0.00651573767327
+sgd_logistic,C(model_seed):C(preprocessing),0.0343363963124,14,0.0102707861101
+sgd_logistic,Residual,0.226632670458,98,0.0677909138354

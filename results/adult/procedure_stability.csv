@@ -1,0 +1,13 @@
+experiment,model,metric,tolerance,reference,n_alternative_procedures,n_within_tolerance,procedure_stability_fraction
+preprocessing_sensitivity,linear_svm,roc_auc,0.001,0.902200088142,2,0,0
+preprocessing_sensitivity,linear_svm,roc_auc,0.005,0.902200088142,2,1,0.5
+preprocessing_sensitivity,linear_svm,roc_auc,0.01,0.902200088142,2,1,0.5
+preprocessing_sensitivity,logistic,roc_auc,0.001,0.902102307757,2,2,1
+preprocessing_sensitivity,logistic,roc_auc,0.005,0.902102307757,2,2,1
+preprocessing_sensitivity,logistic,roc_auc,0.01,0.902102307757,2,2,1
+preprocessing_sensitivity,random_forest,roc_auc,0.001,0.916559988782,2,2,1
+preprocessing_sensitivity,random_forest,roc_auc,0.005,0.916559988782,2,2,1
+preprocessing_sensitivity,random_forest,roc_auc,0.01,0.916559988782,2,2,1
+preprocessing_sensitivity,sgd_logistic,roc_auc,0.001,0.901928889417,2,0,0
+preprocessing_sensitivity,sgd_logistic,roc_auc,0.005,0.901928889417,2,0,0
+preprocessing_sensitivity,sgd_logistic,roc_auc,0.01,0.901928889417,2,0,0

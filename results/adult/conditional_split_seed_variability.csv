@@ -1,0 +1,5 @@
+model,metric,estimand,split_sd,seed_sd,split_range,seed_range,split_to_seed_sd_ratio,seed_sd_is_zero
+linear_svm,roc_auc,conditional_one_factor_at_a_time,0.00281887508329,2.25840514163e-16,0.012455780534,0,1.24817068086e+13,False
+logistic,roc_auc,conditional_one_factor_at_a_time,0.00289358406713,2.25840514163e-16,0.013326924923,0,1.28125109786e+13,False
+random_forest,roc_auc,conditional_one_factor_at_a_time,0.00245444096981,0.000183241762461,0.010558328947,0.000945990226,13.3945501116,False
+sgd_logistic,roc_auc,conditional_one_factor_at_a_time,0.00295480941081,0.000411474033697,0.013892312185,0.001760378518,7.18103493496,False
