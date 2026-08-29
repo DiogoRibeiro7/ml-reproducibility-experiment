@@ -1,189 +1,161 @@
-# Release validation — v0.5.0
+# Release validation — primary Adult empirical release
 
-## Scope
+## Status
 
-`v0.5.0` is a **pre-Adult empirical release**, like `v0.4.0` before it. It contains no Adult source bytes, no Adult acquisition receipt, no Adult model outputs and no primary empirical conclusion.
-
-It exists because `v0.4.0` carried a defect in the reproducibility machinery itself.
-
-## Why the design was re-frozen
-
-`v0.4.0` wrote every scientific CSV and JSON artifact through Python text mode and `DataFrame.to_csv`, both of which emit the host platform's line ending. Identical science therefore produced different SHA-256 values on Windows and Linux.
-
-The consequences were concrete and were reproduced before this release was prepared:
+This is no longer a pre-data release. The preregistered Adult experiment has been
+executed, the release gate has authorised it, and the primary release manifest is
+written.
 
 ```text
-v0.4.0 smoke release gate on Windows       10/12  FAIL
-  derived_tables                           all 11 tables failed, on line endings alone
+frozen design (tag)      v0.7.0  ->  5968e2d3f1c6d0f0167585c4151ddf194a99f75e
+empirical results               ->  c58f85311e99e619b8f28abb4015b4f78977402f
+adult design lock        2eb2351f4ae40971a5428c7aa6bbf3f906826ade0f99054abd56e03e3275d7d9
+final experiment lock    a5729ae1263e9c3c853b99ee91eed21999cd368e455e60d5ef184b2bb1f2899c
+preregistration capsule  8d791b1626d524822c0f72c7190353dcf5553cdee3918b57a81d89d33a06c0be
 ```
 
-Separately, `v0.4.0` shipped no `.gitattributes`. Cloned with the Git-for-Windows default `core.autocrlf=true`, its artifacts hashed to:
+The design files are byte-identical at the freeze and after execution. `verify-design-lock`
+passes against the post-run tree, so nothing scientifically relevant moved while the
+results were being produced.
+
+## Execution record
 
 ```text
-adult design lock    1f5fea91101fc7ce492d8d2a07f6ca22b964fda6fff976e1917bcf2cbe40d4c1
-capsule              5cff8aeef4eb14266ceeae210946f342bb4c9c4405c721fbe0c62dff5bdcd533
+capsule published        immutable release v0.7.0 (private repository)
+anchor recorded          remote capsule == local capsule, byte for byte
+Adult acquired           both files match the pinned SHA-256 policy
+run-all                  2026-08-28 18:01:58Z -> 21:10:35Z   (3 h 09 m)
+release gate             2026-08-28 21:11:57Z -> 08:36:38Z   14/14 PASS
+finalise                 2026-08-29 08:39:17Z -> 12:32:31Z
 ```
 
-instead of their frozen values, so `verify-design-lock` and `record-external-anchor` failed on a correct clone. The study could not be verified at all on a default Windows checkout.
+The gate and the finalisation each replayed all 636 fits independently. Wall-clock times
+are inflated by host throttling overnight; the gate consumed 1 h 56 m of CPU across a
+10.5 h window. Throttling delays a replay, it cannot corrupt one.
 
-Because the affected files (`release.py`, `experiment.py`, `provenance.py`, `design.py`, `data.py`, `anchor.py`, `cli.py`, `pyproject.toml`) are covered by the Adult design lock, correcting them necessarily invalidates the `v0.4.0` lock and capsule. That is why this is a scientific version change rather than an operational patch.
-
-**The experimental design is unchanged.** Models, seeds, tolerances, preprocessing procedures, estimands and the 636-fit commitment are identical to `v0.4.0`.
-
-## What changed
-
-1. All scientific writes route through `src/ml_reproducibility/serialization.py`, which pins LF newlines and the 12-significant-digit float format. On Linux the emitted bytes are unchanged, so the correction is backwards-compatible with the canonical platform.
-2. `.gitattributes` sets `* -text`, disabling Git end-of-line conversion.
-3. `types-PyYAML` was added to the development dependencies and to CI. Without it `mypy src` fails on `config.py`, so the `v0.4.0` CI definition could not have passed its own type-check step.
-4. `environment/runtime-policy.json` now declares the canonical platform and states which quantities are platform-portable.
-5. `artifacts/release_manifest.json` moves to schema 5 and covers every tracked file. Schema 4 hashed 39 files and omitted `.github/workflows/ci.yml`, `LICENSE` and `.gitignore`, leaving the CI definition and the licence unprotected.
-
-## Frozen identities
+## Release gate
 
 ```text
-Adult design lock SHA-256:
-603e793cefa13a4a21bed9ecf70ef83aff90ee96d9c33fa503a8f1b08d92b355
-
-Adult preregistration capsule SHA-256:
-142d9de4824a2c80a100ace206812dc183ada6b5bc1a82ef52b3f76f112370a1
-
-Smoke design lock SHA-256:
-0ccef6d12cdb9f76a97abd93021e41fd74dbcde1dd1720ff0ade837874708758
+14/14 checks passed, release_authorised = true
 ```
 
-The capsule reports `expected_raw_fit_count = 636`, with both pre-data assertions false, exactly as in `v0.4.0`.
+design_lock · reference_environment · external_anchor · dataset · the four raw families ·
+environment_consistency · analysis_manifest · baseline_consistency · deterministic_controls ·
+derived_tables · full_empirical_replay
 
-## Canonical validation environment
+`full_empirical_replay` reconstructed every one of the 636 configured fits from the locked
+design and required them to regenerate: metrics at the stored 12-significant-digit
+precision, and prediction hashes, score hashes, score diagnostics and convergence outcomes
+exactly.
 
-Every result below was produced on the declared canonical platform:
+An independent structural check (`check_primary_outputs.py`, which does not use the
+experiment's own verification code) passed 21/21 against the completed outputs.
+
+## Primary results
+
+### Reproducing a metric does not reproduce the model
+
+Across 29 genuine estimator-seed reruns with the test set held fixed:
+
+| model | ROC-AUC reproduced at ε=0.001 | distinct prediction vectors | exact prediction match |
+|---|---|---|---|
+| random_forest | 29/29 | 30 / 30 | **0.000** |
+| sgd_logistic | 27/29 | 30 / 30 | **0.000** |
+| logistic | 29/29 | 1 | 1.000 (deterministic) |
+| linear_svm | 29/29 | 1 | 1.000 (deterministic) |
+
+Thirty runs of the random forest agree on ROC-AUC to within 0.001 and not one of them
+makes the same predictions as the reference. Agreement on the reported number is fully
+compatible with disagreement about which observations receive which label.
+
+### Variance attribution separates by estimator
+
+Share of ROC-AUC sum of squares in the 8 × 8 × 3 crossed design:
+
+| | split_seed | model_seed | preprocessing |
+|---|---|---|---|
+| random_forest | **98.9%** | 0.1% | 0.0% |
+| sgd_logistic | 0.5% | 0.8% | **87.2%** |
+
+Conditioning either conclusion on a single arbitrary baseline would have been misleading.
+This is what the crossed design exists to prevent.
+
+### Reference-conditioned and pairwise reproducibility
+
+Split sensitivity, ROC-AUC, with 95% intervals:
+
+| model | ε=0.001 reference | ε=0.001 pairwise | ε=0.010 reference | ε=0.010 pairwise |
+|---|---|---|---|---|
+| random_forest | 0.414 [0.255, 0.593] | 0.280 [0.173, 0.388] | 1.000 [0.883, 1.000] | 0.991 [0.973, 1.000] |
+| logistic | 0.138 [0.055, 0.306] | 0.202 [0.125, 0.280] | 1.000 [0.883, 1.000] | 0.986 [0.962, 1.000] |
+| linear_svm | 0.172 [0.076, 0.345] | 0.195 [0.119, 0.272] | 1.000 [0.883, 1.000] | 0.989 [0.967, 1.000] |
+| sgd_logistic | 0.172 [0.076, 0.345] | 0.177 [0.106, 0.248] | 1.000 [0.883, 1.000] | 0.982 [0.952, 1.000] |
+
+Reproducibility at the tightest declared tolerance is poor for every model. The declared
+precision limit of the 29-rerun design (worst-case 95% half-width 0.171) applies to all of
+these, and the two estimands are not interchangeable: the reference-conditioned rate
+describes reproducing one published number, the pairwise rate describes two independent
+legitimate executions agreeing with each other.
+
+### Procedure sensitivity
+
+Maximum absolute ROC-AUC drift from the reference procedure:
 
 ```text
-platform          Linux x86_64 (6.6.87.2-microsoft-standard-WSL2)
-python            3.13.5
-packages          exact match to environment/requirements.lock.txt (21/21)
-BLAS              OpenBLAS 0.3.30 (Haswell)
-n_jobs            1
-numeric_threads   1
+logistic        0.000006      random_forest   0.000029
+linear_svm      0.332812      sgd_logistic    0.296857
 ```
 
-## Static analysis and tests — actually executed
+Procedure-stability fractions at ε=0.010 are 1.0 for logistic and random forest, 0.5 for
+the linear SVM and **0.0** for SGD: neither alternative procedure lands within tolerance.
 
-`v0.4.0` honestly recorded that Ruff and mypy had never been run. They have now been run, at the versions the project pins, and the failures they found have been fixed.
+### Convergence reports perfect health, and is wrong
 
 ```text
-ruff 0.12.12      All checks passed          (v0.4.0: 6 errors)
-mypy 1.17.1       Success, 14 source files   (v0.4.0: 32 errors, strict)
-pytest            23 passed                  (v0.4.0: 17)
-compileall        passed
+636 / 636 fits converged        total convergence warnings: 0
 ```
 
-`artifacts/release_manifest.json` now records `ruff_executed_locally: true` and `mypy_executed_locally: true`.
-
-The six new tests are in `tests/test_serialization.py`. They pin the byte contract of every writer. Reintroducing the platform newline in either the CSV or the JSON path fails them:
+Every fit in the study, under every procedure, reports successful convergence. Yet:
 
 ```text
-CRLF injected into the CSV writer   -> 2 tests fail
-CRLF injected into the JSON writer  -> 3 tests fail
+sgd_logistic  standard  roc_auc 0.902  median |score| 2.5e+00
+sgd_logistic  robust    roc_auc 0.792  median |score| 3.6e+01
+sgd_logistic  none      roc_auc 0.605  median |score| 2.6e+07
 ```
 
-## Smoke release gate
+Unscaled SGD converges by the optimiser's own criterion while its margins reach 26 million.
+The convergence diagnostic — the mechanism the design originally relied on to detect
+procedural failure — does not fire for this failure at all.
 
-```text
-12/12 release checks passed
-release_authorised = true
-```
+This was found during pre-freeze review on synthetic data at Adult's numeric scale, and it
+is why ROC-AUC is computed from the estimator's own ranking score rather than from a
+saturating probability. Ranking on probabilities would have collapsed this cell onto a
+handful of tied values and reported a meaningless metric under a clean convergence flag,
+in 64 of the 192 SGD factorial cells. `score_abs_median` and `n_unique_scores` are recorded
+for every fit so the pathology is observed data rather than a silent artifact.
 
-The checks are design lock, canonical reference environment, dataset provenance, the four raw families, environment consistency, baseline consistency, deterministic-control invariance, exact derived-table reconstruction, and full independent empirical replay.
+## Limits on what may be claimed
 
-## Continuity with v0.4.0
+**The anchor is private.** The capsule is an asset of an immutable release in a private
+repository, so it is retrievable only with credentials. Every anchor record carries
+`publicly_retrievable: false`. This is a self-binding prospectivity control: it prevents
+the design from being revised after results were seen and makes such an attempt detectable,
+but it does not prove prospectivity to an independent reader. Results from this study must
+not be described as externally preregistered. Publishing the capsule file alone to a
+DOI-backed archive would restore public verifiability with the repository still private,
+and requires no code change.
 
-The re-freeze did not move the science. Comparing the regenerated smoke study against `v0.4.0`:
+**The gate passed on one platform.** `full_empirical_replay` requires bit-identical
+continuous-score signatures, which depend on the BLAS build. Verification on other hardware
+is expected to reproduce every derived table while differing in score signatures. That is a
+platform difference and must be reported as one, not as a failed reproduction.
 
-```text
-10 of 11 derived tables   byte-identical
- 1 of 11 derived tables   factorial_anova_roc_auc differs
-```
+**Precision is limited by design.** 29 genuine reruns give a worst-case 95% interval
+half-width of 0.171. The study does not claim to resolve moderate differences in
+reproduction rate between models or between factors. Every reported rate carries its
+interval.
 
-The single difference is one F statistic:
-
-```text
-v0.4.0   sgd_logistic,C(model_seed),...,0.602666204968,...
-v0.5.0   sgd_logistic,C(model_seed),...,0.602666204969,...
-```
-
-`sum_sq`, `df` and `share_total_ss` are identical to the last stored digit. The change is one unit in the twelfth significant figure, produced by a different OpenBLAS build, not by any change to the analysis.
-
-## Cross-platform verification
-
-The same release was independently checked on Windows against the canonical Linux artifacts:
-
-```text
-                                       v0.4.0        v0.5.0
-derived tables reproduced byte-exact    0 / 11       10 / 11
-smoke gate                             10 / 12       10 / 12
-```
-
-The line-ending defect is closed: 10 of 11 derived tables now reproduce byte-for-byte across operating systems, where previously none did.
-
-Two checks still fail off the canonical platform, and both are expected:
-
-```text
-derived_tables          factorial_anova_roc_auc  (F statistic, 12th significant digit)
-full_empirical_replay   split_sensitivity.score_sha256
-```
-
-Measured against the canonical Linux run, the Windows replay produced **identical predicted classes for every fit**, with metrics agreeing to `3.1e-13` — far inside the `1e-11` replay tolerance and the smallest declared reproducibility tolerance of `0.001`. Only the continuous-score SHA-256 signatures differ.
-
-This is a property of the study, not a defect, and the gate is deliberately **not** relaxed to accommodate it. Behavioural score signatures are signatures of one numerical environment. A replication on other hardware that reproduces the derived tables while differing in score hashes has reproduced the conclusions and not the bytes, and `docs/PROTOCOL.md` requires that outcome to be reported as a platform difference rather than as a failed reproduction or as tampering.
-
-## Negative pre-execution boundary test
-
-With the v0.5.0 design lock and capsule in place and no external publication record:
-
-```text
-verify-external-anchor  exit status = 1
-download-data           exit status = 1
-```
-
-Both fail at the external-anchor requirement. After the tests:
-
-```text
-adult.data    ABSENT
-adult.test    ABSENT
-receipt.json  ABSENT
-data/raw/     not created
-```
-
-The boundary prevents acquisition through the supported CLI rather than merely documenting the intended order.
-
-## Capsule determinism
-
-The preregistration capsule was rebuilt from the frozen design on a second operating system and reproduced **byte-for-byte**. The capsule is a function of the locked design alone, not of the machine that generated it.
-
-## Adversarial regression protection
-
-The coordinated-tampering test remains active and passing: a non-reference raw result altered together with its behavioural hashes is still rejected by `full_empirical_replay`, because the gate reconstructs the fit independently.
-
-## Adult release status
-
-Deliberately unauthorised.
-
-```text
-design_lock            PASS
-reference_environment  PASS
-external_anchor        FAIL   no externally published capsule recorded
-dataset                FAIL   unavailable without the anchor
-raw_* (4 families)     FAIL   absent
-
-release_authorised = false   (2/8)
-```
-
-This is the intended state.
-
-## Next authorised action
-
-External publication, not Adult execution.
-
-The capsule must be published as an asset of an immutable release **in a public repository**. `record-external-anchor` retrieves the object with an unauthenticated HTTPS request; a private repository returns 404 to that request and cannot anchor the preregistration. Beyond the tooling, a preregistration only its author can read is not an external anchor.
-
-Publish the exact bytes of `artifacts/adult_preregistration_capsule.json`, then run `record-external-anchor`. Only once the retrieved remote bytes match may Adult be acquired.
+**Duplicate records are retained.** Adult contains 57 duplicate feature rows and 52
+duplicate labelled rows out of 48,842, matching conventional usage. The counts are recorded
+as dataset provenance. At 0.1% the resulting optimism shifts metric levels slightly and is
+not a plausible driver of the between-run variation the study measures.
