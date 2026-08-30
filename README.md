@@ -1,337 +1,239 @@
 # ML Reproducibility Experiment
 
-A controlled **classical machine-learning** study of how reported tabular-classification results change because of train/test splitting, estimator randomness and preprocessing choices.
+A prospectively frozen, externally preregistered study of what actually reproduces when a
+conventional classical machine-learning result is repeated.
 
-The repository is an empirical experiment, not a generic experiment-tracking framework.
+**Headline finding: reproducing a reported metric does not reproduce the model.** Across 29
+estimator-seed reruns with the test set held fixed, a random forest reproduced its reference
+ROC-AUC in **29 of 29** cases at the tightest declared tolerance — while producing a
+different prediction vector **every single time**. Exact behavioural match rate: **0.000**.
 
-## Research question
+A replication that checked only the headline number would have reported success in all 29.
 
-A paper may report one number such as
+---
 
-\[
-\mathrm{ROC\text{-}AUC}=0.91.
-\]
+## Status
 
-Another researcher can follow the stated method and obtain a different value. This study asks which parts of a conventional classical-ML workflow drive that difference, and whether reproducing an aggregate metric also reproduces the model's actual behaviour.
-
-## Primary dataset
-
-The primary study uses the UCI **Adult** dataset (Becker & Kohavi, 1996; DOI `10.24432/C5XW20`):
-
-- 48,842 observations;
-- 14 predictors;
-- mixed categorical and integer features;
-- missing values;
-- binary income target.
-
-The canonical `adult.data` and `adult.test` bytes are SHA-256 pinned. Source-byte drift is a hard failure.
-
-## Models
-
-| Model | Role |
-|---|---|
-| Logistic Regression | low-randomness control |
-| Linear SVM | low-randomness control |
-| Random Forest | stochastic estimator |
-| SGD Logistic | stochastic, scale-sensitive estimator |
-
-No neural-network or deep-learning model is used.
-
-## Prospective Adult design
-
-The v0.5.0 primary design contains
-
-\[
-\boxed{636\text{ classical-ML fits}}.
-\]
-
-They comprise:
-
-- 120 split-sensitivity fits;
-- 120 estimator-seed-sensitivity fits;
-- 12 preprocessing-sensitivity fits;
-- 192 crossed SGD Logistic fits;
-- 192 crossed Random Forest fits.
-
-The primary metric is ROC-AUC, with predeclared absolute tolerances
-
-\[
-0.001,\quad0.005,\quad0.010.
-\]
-
-## Reproducibility estimands
-
-For split and estimator-seed reruns, the study reports **reference-conditioned reproducibility**:
-
-\[
-R_0(\varepsilon)
-=
-P(|M-m_0|\le\varepsilon\mid m_0).
-\]
-
-The original reference observation is excluded. With 30 configured runs, there are 29 genuine reruns in the denominator.
-
-The study also reports **pairwise reproducibility**:
-
-\[
-R_{\mathrm{pair}}(\varepsilon)
-=
-P(|M_1-M_2|\le\varepsilon),
-\]
-
-using every unordered pair of legitimate runs.
-
-Preprocessing is handled differently. `standard`, `robust` and `none` are deliberately selected procedures rather than random draws, so the repository reports a **procedure-stability fraction** instead of describing the finite set as a probability distribution.
-
-## Behavioural reproducibility
-
-Every run stores SHA-256 signatures for the predicted class vector and continuous score vector. On families with a fixed test set, the study distinguishes
-
-\[
-\text{similar ROC-AUC}
-\neq
-\text{same predictions}
-\neq
-\text{same scores}.
-\]
-
-Reference rows do not count as reproductions of themselves.
-
-## Crossed variance design
-
-The full split × model-seed × preprocessing experiment is run for both stochastic estimators:
-
-\[
-8\times8\times3
-\]
-
-cells for SGD Logistic and the same 192 cells for Random Forest.
-
-This avoids making the split-versus-seed conclusion depend on one arbitrarily selected baseline split or seed.
-
-## Convergence is data
-
-Every fit records:
+The study is complete. The design was frozen and published before any Adult byte was
+retrieved; the 636 fits were then executed and independently replayed.
 
 ```text
-converged
-convergence_warning_count
-n_iter
+frozen design         v0.7.1  ->  30a0aec3e79c4ddd35c58e284185d702711b205a
+adult design lock     2eb2351f4ae40971a5428c7aa6bbf3f906826ade0f99054abd56e03e3275d7d9
+preregistration       8d791b1626d524822c0f72c7190353dcf5553cdee3918b57a81d89d33a06c0be
+release gate          14 / 14 passed, release_authorised = true
+primary fits          636, all independently reconstructed
 ```
 
-A configured run is not discarded because it fails to converge. For a scale-sensitive method such as SGD, convergence failure under one preprocessing procedure is itself part of the procedural-reproducibility result.
+## Verify the preregistration yourself
 
-## Numerical execution policy
+You do not have to trust any code in this repository. The capsule is an asset of an
+immutable public release, and it fixes the entire design:
 
-The canonical primary run fixes:
+```bash
+curl -fsSL https://github.com/DiogoRibeiro7/ml-reproducibility-experiment/releases/download/v0.7.1/adult_preregistration_capsule.json \
+  | sha256sum
+# 8d791b1626d524822c0f72c7190353dcf5553cdee3918b57a81d89d33a06c0be
+```
+
+The capsule embeds the complete final experiment lock — estimator hyperparameters, the
+enumerated seed grids, the train/test procedure, the convergence policy, the statistical
+analysis and the release-gate criteria — so it can be **read as a specification**, not
+merely hashed. It also asserts that no Adult source byte and no Adult result existed when it
+was built.
+
+---
+
+## What the study asked
+
+A paper reports `ROC-AUC = 0.91`. Someone follows the stated method and gets something else.
+Which part of an ordinary tabular workflow moved the number — and if the number does come
+back, has anything actually been reproduced?
+
+**Design.** UCI Adult (48,842 rows, 14 predictors, source bytes SHA-256 pinned). Four
+estimators: logistic regression and a linear SVM as low-randomness controls, a random forest
+and an SGD logistic classifier as stochastic estimators. Three preprocessing procedures:
+median imputation with standard scaling, with robust scaling, and without scaling.
 
 ```text
-Python              3.13.5
-n_jobs              1
-numeric_threads     1
+120  split-sensitivity fits        30 split seeds  × 4 models
+120  estimator-seed fits           30 model seeds  × 4 models
+ 12  preprocessing fits             3 procedures   × 4 models
+384  crossed factorial fits         8 × 8 × 3      × 2 stochastic models
+───
+636  primary model fits
 ```
 
-Exact package versions live in `environment/requirements.lock.txt`. Model fitting uses `threadpoolctl` to constrain numerical kernels to one thread. Run manifests record the numerical backend and an environment identity hash.
+No neural networks. The point is a conventional workflow, not a competitive one.
 
-Poetry remains the project metadata/tooling convention. Because Poetry was unavailable in the isolated build environment used to prepare the locked runtime, the prospective package set is additionally pinned through the explicit requirements lock rather than a newly generated `poetry.lock`.
+## What it found
 
-## Machine-verifiable preregistration capsule
+### Metric agreement is not behavioural agreement
 
-v0.4.0 strengthened the prospective boundary: a local JSON that merely claims to point at a release is not sufficient. v0.5.0 keeps that boundary unchanged and makes the artifact bytes themselves platform-independent.
+| estimator | ROC-AUC reproduced at ε=0.001 | distinct prediction vectors | exact match |
+|---|---|---|---|
+| random_forest | 29 / 29 | 30 / 30 | **0.000** |
+| sgd_logistic | 27 / 29 | 30 / 30 | **0.000** |
+| logistic *(deterministic)* | 29 / 29 | 1 / 30 | 1.000 |
+| linear_svm *(deterministic)* | 29 / 29 | 1 / 30 | 1.000 |
 
-After the Adult design has been frozen, the command
+The two deterministic estimators reproduce by construction, not as a finding; every row for
+them is flagged `deterministic_by_construction` so a rate of 1.0 is never read as an estimate.
 
-```bash
-poetry run ml-repro --root . build-anchor-capsule --config configs/adult.yml
-```
+### Where the variance lives depends entirely on the estimator
 
-creates
+Share of ROC-AUC sum of squares in the crossed design:
+
+| | split_seed | model_seed | preprocessing |
+|---|---|---|---|
+| random_forest | **98.9%** | 0.1% | 0.0% |
+| sgd_logistic | 0.5% | 0.8% | **87.2%** |
+
+Answering this from a one-factor-at-a-time experiment on one arbitrary baseline would have
+generalised badly to the other estimator. That is what the crossed design prevents.
+
+### The convergence flag reports perfect health, and is wrong
+
+All **636 / 636** fits converged. Zero convergence warnings in the entire study. Yet:
 
 ```text
-artifacts/adult_preregistration_capsule.json
-artifacts/adult_preregistration_capsule.json.sha256
+sgd_logistic  standard  roc_auc 0.902  converged=true  median |score| 2.5e+00
+sgd_logistic  robust    roc_auc 0.792  converged=true  median |score| 3.6e+01
+sgd_logistic  none      roc_auc 0.605  converged=true  median |score| 2.6e+07
 ```
 
-The capsule is deterministic and contains:
+Unscaled SGD satisfies the optimiser's own criterion while its decision margins reach
+twenty-six million. The mechanism the design originally relied on to detect procedural
+failure does not fire for this failure at all.
 
-- the complete design-lock payload and its SHA-256;
-- the configuration SHA-256;
-- the pinned UCI source URLs and source-byte hashes;
-- the model and preprocessing sets;
-- the primary metric and reproduction tolerances;
-- the exact raw-family fit counts and 636-fit total;
-- explicit assertions that Adult source bytes and Adult empirical outputs were absent when capsule construction was authorised.
+This was caught in review **before** the freeze. ROC-AUC is therefore computed from the
+estimator's own ranking score rather than a saturating probability: at those margins the
+logistic link collapses every predicted probability onto {0, 1}, and ranking on probabilities
+would have reported a tie-dominated number under a clean convergence flag in 64 of the 192
+SGD factorial cells. `score_kind`, `n_unique_scores` and `score_abs_median` are recorded for
+every fit so the pathology is data.
 
-Capsule construction fails if canonical Adult source files or Adult empirical outputs are already present.
+### Reproducibility is poor at the tightest tolerance
 
-## External publication boundary
+Split sensitivity, reference-conditioned, with 95% Wilson intervals:
 
-The **exact capsule bytes** must then be published through a stable external object such as a GitHub release asset or DOI-backed archive file.
+| estimator | ε=0.001 | ε=0.005 | ε=0.010 |
+|---|---|---|---|
+| random_forest | 0.414 [0.26, 0.59] | 0.862 | 1.000 |
+| linear_svm | 0.172 [0.08, 0.35] | 0.897 | 1.000 |
+| sgd_logistic | 0.172 [0.08, 0.35] | 0.862 | 1.000 |
+| logistic | 0.138 [0.06, 0.31] | 0.897 | 1.000 |
 
-Do not hand-create `adult_external_anchor.json`. Record it with:
+The tolerance you declare does more work than the method you describe.
 
-```bash
-poetry run ml-repro --root . record-external-anchor \
-  --config configs/adult.yml \
-  --kind github_release_asset \
-  --url https://github.com/OWNER/REPO/releases/download/v0.5.0/adult_preregistration_capsule.json \
-  --immutable-ref v0.5.0
-```
+---
 
-The command retrieves the remote object and refuses to create the local anchor unless
+## What makes this different from "we published our code"
 
-\[
-\boxed{
-\text{remote capsule bytes}
-=
-\text{local prospectively generated capsule bytes}.
-}
-\]
+Four mechanisms, each of which fails loudly rather than silently.
 
-The supported anchor kinds are `github_release_asset`, `github_private_release_asset`, `doi_archive_file` and `archive_file`. The URL must use HTTPS.
+**Design lock.** Every file that determines the experiment — configuration, protocol, study
+design, runtime policy, package lock and all source — is hashed. Any edit invalidates it.
 
-This study anchors its capsule in a **private** immutable release. That is a deliberate choice with a cost: a capsule only its author can retrieve is not independent evidence that the design predated the data. Every anchor record therefore carries `publicly_retrievable: false`, and verification rejects an anchor whose flag disagrees with its kind. See [Prospective protocol](docs/PROTOCOL.md) for exactly what the private anchor does and does not establish.
+**Preregistration capsule.** A deterministic document binding the design lock, the pinned
+UCI source policy, the models, procedures, tolerances and exact per-family fit counts. It is
+byte-reproducible: rebuilding it from the frozen design on a different operating system
+yields identical bytes. Construction is refused once Adult source bytes or results exist.
 
-A subsequent
+**External anchor.** The capsule is retrieved back from its published location over
+unauthenticated HTTPS and must match the local bytes exactly before Adult may be downloaded.
+`load_adult()` never acquires data implicitly — loading and downloading are separate
+operations, and acquisition is refused without a verified anchor.
 
-```bash
-poetry run ml-repro --root . verify-external-anchor --config configs/adult.yml
-```
-
-re-fetches the external capsule and checks the same byte-level identity before Adult execution is authorised.
-
-## Adult acquisition is anchor-bound
-
-Only after the remote capsule verifies may Adult be downloaded:
-
-```bash
-poetry run ml-repro --root . download-data --config configs/adult.yml
-```
-
-The acquisition receipt binds the raw source hashes to the verified external anchor. Every Adult run manifest and the final empirical release manifest bind the same anchor identity.
-
-Therefore changing the local external-anchor record after empirical execution invalidates the provenance chain.
-
-## Required primary execution order
-
-The repository contains a v0.5.0 Adult design lock. **Do not re-freeze it.**
+**Release gate.** Fourteen checks, of which the last is the one that matters:
+`full_empirical_replay` independently reconstructs **every** configured fit and requires it
+to regenerate — metrics to the stored 12-significant-digit precision, and prediction hashes,
+score hashes, score diagnostics and convergence outcomes exactly.
 
 ```text
-locked v0.5.0 design
-        ↓
-build deterministic preregistration capsule
-        ↓
-publish exact capsule bytes externally
-        ↓
-record-external-anchor
-        ↓
-verify-external-anchor
-        ↓
-download-data
-        ↓
-run-all
-        ↓
-release-status
-        ↓
-full independent replay of all 636 fits
-        ↓
-finalise-primary-release
+edited raw CSV + edited manifest + edited derived tables  ⇒  still fails
 ```
 
-The executable sequence after publication is:
+unless the altered result can actually be produced by the locked experiment. The repository
+carries regression tests that attempt exactly that coordinated tampering and confirm it is
+rejected.
 
-```bash
-poetry run ml-repro --root . verify-design-lock --config configs/adult.yml
-poetry run ml-repro --root . verify-external-anchor --config configs/adult.yml
-poetry run ml-repro --root . download-data --config configs/adult.yml
-poetry run ml-repro --root . run-all --config configs/adult.yml
-poetry run ml-repro --root . release-status --config configs/adult.yml
-poetry run ml-repro --root . finalise-primary-release --config configs/adult.yml
-```
+### The study reproduced itself
 
-`download-data` and every Adult model-execution command fail when the external anchor is absent, stale or byte-inconsistent with the published capsule.
-
-## Main result artifacts
-
-After a successful primary run:
+Executed twice in full, days apart, under two different anchors:
 
 ```text
-results/adult/
-├── split_sensitivity.csv
-├── seed_sensitivity.csv
-├── preprocessing_sensitivity.csv
-├── factorial.csv
-├── split_summary.csv
-├── seed_summary.csv
-├── preprocessing_summary.csv
-├── reproducibility_drift.csv
-├── reference_reproducibility_curve.csv
-├── pairwise_reproducibility_curve.csv
-├── procedure_stability.csv
-├── conditional_split_seed_variability.csv
-├── behavioural_reference_match.csv
-├── factorial_anova_roc_auc.csv
-├── convergence_summary.csv
-├── analysis.manifest.json
-└── primary_release_manifest.json
+ 4 / 4   raw result families    byte-identical
+11 / 11  derived analysis tables byte-identical
+ 4 / 4   run manifests          differ — they bind the anchor, as they must
 ```
 
-Every raw family has its own provenance manifest.
+---
 
-## Release gate
+## Reproducing it
 
-The release gate verifies the locked design, canonical runtime, remotely reproduced Adult preregistration capsule, anchor-bound source acquisition receipt, exact run grids, manifests, environment consistency, baseline overlaps, deterministic controls and every derived table.
-
-Most importantly, it independently reruns every configured raw fit and requires the proposed raw results to regenerate. Metrics are compared at the declared 12-significant-digit storage precision. Prediction hashes, score hashes and convergence diagnostics must match exactly.
-
-Therefore
-
-\[
-\boxed{
-\text{edited raw CSV}
-+
-\text{edited manifest}
-+
-\text{edited derived tables}
-\not\Rightarrow
-\text{release pass}
-}
-\]
-
-unless the altered result can actually be reproduced by the locked experiment.
-
-## Offline validation profile
-
-`configs/smoke.yml` uses scikit-learn's Wisconsin breast-cancer dataset to validate the complete experiment machinery without being confused with the primary Adult result.
+The canonical environment is Python 3.13.5 with the exact package set in
+`environment/requirements.lock.txt`, one estimator job and one numerical thread.
 
 ```bash
-poetry run ml-repro --root . verify-design-lock --config configs/smoke.yml
-poetry run ml-repro --root . run-all --config configs/smoke.yml
-poetry run ml-repro --root . release-status --config configs/smoke.yml
+pip install -r environment/requirements.lock.txt
+pip install --no-deps -e .
+
+ml-repro --root . verify-design-lock     --config configs/adult.yml
+ml-repro --root . verify-external-anchor  --config configs/adult.yml
+ml-repro --root . download-data           --config configs/adult.yml
+ml-repro --root . run-all                 --config configs/adult.yml
+ml-repro --root . release-status          --config configs/adult.yml
 ```
 
-Smoke artifacts live under `results/smoke/`.
+Expect roughly 2.5 hours of CPU for the fits and the same again for each replay; the random
+forest is almost all of it.
 
-## Deterministic artifact bytes
-
-Every scientific CSV and JSON output is written through `src/ml_reproducibility/serialization.py`, which pins LF newlines and the 12-significant-digit float format. Python text mode and `DataFrame.to_csv` otherwise emit the host platform's newline, which would change every SHA-256 and fail the release gate on line endings alone.
-
-`.gitattributes` disables Git end-of-line conversion for the same reason. Without it, a clone made with the Git-for-Windows default `core.autocrlf=true` produces a design lock and preregistration capsule whose hashes differ from the frozen values, and the study cannot be verified at all.
-
-Aggregate metrics and every derived table are portable across operating systems. Per-fit prediction and score signatures are not, because continuous scores depend on the BLAS build. See [Study design](docs/STUDY_DESIGN.md) and `environment/runtime-policy.json`.
-
-## Development
+An offline profile using scikit-learn's bundled breast-cancer dataset exercises every model
+and every procedure without touching Adult:
 
 ```bash
-poetry run ruff check .
-poetry run mypy src
-poetry run pytest
+ml-repro --root . run-all        --config configs/smoke.yml
+ml-repro --root . release-status --config configs/smoke.yml
 ```
 
-The isolated validation environment can also run the source tree directly with `PYTHONPATH=src`.
+Development checks: `ruff check .`, `mypy src`, `pytest` (38 tests).
 
-See [Study design](docs/STUDY_DESIGN.md) and [Prospective protocol](docs/PROTOCOL.md).
+## Layout
 
-## Current status
+```text
+configs/        adult.yml and the offline smoke profile
+docs/           STUDY_DESIGN.md and the prospective PROTOCOL.md — both design-locked
+src/            the experiment, the release gate and the anchoring machinery
+artifacts/      design locks, the final experiment lock, the capsule, the anchor record
+results/adult/  4 raw families, 11 derived tables, manifests, primary release manifest
+environment/    runtime policy and the exact package lock
+RELEASE_VALIDATION.md   execution record, results, deviations and limits
+ROADMAP.md              what may change, and what may not
+```
 
-`v0.5.0` is a **pre-Adult empirical release**. The canonical Adult source bytes and Adult model results are intentionally absent. The design is frozen and the deterministic preregistration capsule is included locally, but primary execution remains blocked until those exact capsule bytes are published externally and verified.
+## Limits
+
+**The gate passed on one platform.** Full replay requires bit-identical continuous-score
+signatures, which depend on the BLAS build. A rerun on other hardware is expected to
+reproduce every derived table while differing in score hashes. That is a platform
+difference; it is not a failed reproduction and not evidence of tampering.
+
+**Precision is bounded by 29 reruns.** Worst-case 95% interval half-width is 0.171. The
+study does not claim to resolve moderate differences in reproduction rate between estimators
+or between factors. Every rate is reported with its interval.
+
+**Duplicate records are retained.** Adult contains 57 duplicate feature rows and 52 duplicate
+labelled rows out of 48,842, matching conventional usage; the counts are recorded as dataset
+provenance rather than silently removed.
+
+**One scope claim, and no more.** This is one dataset and four estimators. It does not define
+reproducibility for machine learning.
+
+See [RELEASE_VALIDATION.md](RELEASE_VALIDATION.md) for the full execution record, the
+protocol deviation, and the complete results.
+
+## Citation
+
+See [CITATION.cff](CITATION.cff). Adult is Becker & Kohavi (1996), UCI Machine Learning
+Repository, DOI `10.24432/C5XW20`.
