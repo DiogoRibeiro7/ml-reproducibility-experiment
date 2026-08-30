@@ -7,11 +7,11 @@ executed, the release gate has authorised it, and the primary release manifest i
 written.
 
 ```text
-frozen design (tag)      v0.7.0  ->  5968e2d3f1c6d0f0167585c4151ddf194a99f75e
-empirical results               ->  c58f85311e99e619b8f28abb4015b4f78977402f
+frozen design (tag)      v0.7.1  ->  30a0aec3e79c4ddd35c58e284185d702711b205a
 adult design lock        2eb2351f4ae40971a5428c7aa6bbf3f906826ade0f99054abd56e03e3275d7d9
 final experiment lock    a5729ae1263e9c3c853b99ee91eed21999cd368e455e60d5ef184b2bb1f2899c
 preregistration capsule  8d791b1626d524822c0f72c7190353dcf5553cdee3918b57a81d89d33a06c0be
+external anchor          public immutable release, publicly_retrievable = true
 ```
 
 The design files are byte-identical at the freeze and after execution. `verify-design-lock`
@@ -20,18 +20,35 @@ results were being produced.
 
 ## Execution record
 
+The study was executed twice: once under the withdrawn private anchor `v0.7.0`, and again
+in full under the public anchor `v0.7.1` that is now in force. Only the second execution is
+the release; the first is reported here because its results are what make the second
+checkable.
+
 ```text
-capsule published        immutable release v0.7.0 (private repository)
-anchor recorded          remote capsule == local capsule, byte for byte
+capsule published        immutable public release v0.7.1
+anchor recorded          remote capsule == local capsule, retrieved anonymously
 Adult acquired           both files match the pinned SHA-256 policy
-run-all                  2026-08-28 18:01:58Z -> 21:10:35Z   (3 h 09 m)
-release gate             2026-08-28 21:11:57Z -> 08:36:38Z   14/14 PASS
-finalise                 2026-08-29 08:39:17Z -> 12:32:31Z
+run-all                  2026-08-29 21:05:04Z -> 2026-08-30 08:27:58Z
+release gate             2026-08-30 08:27:58Z -> 11:18:12Z   14/14 PASS
+finalise                 2026-08-30 11:18:12Z -> 14:14:30Z
 ```
 
-The gate and the finalisation each replayed all 636 fits independently. Wall-clock times
-are inflated by host throttling overnight; the gate consumed 1 h 56 m of CPU across a
-10.5 h window. Throttling delays a replay, it cannot corrupt one.
+Wall-clock times are inflated by host throttling; the fits consumed roughly 2 h 30 m of CPU
+across an 11 h window. Throttling delays a replay, it cannot corrupt one.
+
+### The re-execution reproduced the first run exactly
+
+Comparing the two independent executions, days apart, under different anchors:
+
+```text
+4 / 4    raw result families    byte-identical
+11 / 11  derived tables         byte-identical
+4 / 4    run manifests          differ — they bind the new anchor, as they must
+```
+
+All 636 fits regenerated bit-for-bit. The only changes are in the provenance records that
+are supposed to change. This is the study's own reproducibility claim, tested on itself.
 
 ## Release gate
 
@@ -134,16 +151,51 @@ handful of tied values and reported a meaningless metric under a clean convergen
 in 64 of the 192 SGD factorial cells. `score_abs_median` and `n_unique_scores` are recorded
 for every fit so the pathology is observed data rather than a silent artifact.
 
+## Deviation from the frozen protocol
+
+`docs/PROTOCOL.md` is covered by the design lock. Its "Anchor visibility" section states
+that the capsule is published to an immutable release **in a private repository** with
+`kind = github_private_release_asset`, and spells out that such an anchor cannot prove
+prospectivity to an independent reader.
+
+That is not what happened. The study was anchored twice:
+
+```text
+v0.7.0  private immutable release, github_private_release_asset   WITHDRAWN
+v0.7.1  public  immutable release, github_release_asset           IN FORCE
+```
+
+The private release `v0.7.0` was withdrawn when the repository history was rewritten to
+remove a personal email address from commit metadata. Because GitHub permanently reserves a
+tag name once an immutable release has used it, `v0.7.0` could not be recreated, and the
+study was re-anchored on `v0.7.1` in a public repository. The design content is unchanged
+across both: the frozen tree hash is identical, and so are the design lock, the final
+experiment lock and the capsule.
+
+**The frozen protocol has deliberately not been edited to match.** Rewriting a preregistered
+document so that it agrees with what was actually done is the specific failure mode
+preregistration exists to prevent, and the fact that this particular deviation *strengthens*
+the evidence is not a reason to make an exception. The protocol stands as written; this is
+the deviation record.
+
+The deviation moves the anchor from author-verifiable to publicly verifiable. Every
+constraint the protocol imposes on execution order was still met: the capsule was built
+before any Adult byte was retrieved, the anchor was verified before acquisition, and the
+636 fits were executed under the anchor their manifests bind.
+
 ## Limits on what may be claimed
 
-**The anchor is private.** The capsule is an asset of an immutable release in a private
-repository, so it is retrievable only with credentials. Every anchor record carries
-`publicly_retrievable: false`. This is a self-binding prospectivity control: it prevents
-the design from being revised after results were seen and makes such an attempt detectable,
-but it does not prove prospectivity to an independent reader. Results from this study must
-not be described as externally preregistered. Publishing the capsule file alone to a
-DOI-backed archive would restore public verifiability with the repository still private,
-and requires no code change.
+**The anchor is public and independently checkable.** The capsule is an asset of the
+immutable public release `v0.7.1`. Anyone can retrieve it without credentials and confirm
+it matches the design the results claim to follow:
+
+```bash
+curl -fsSL https://github.com/DiogoRibeiro7/ml-reproducibility-experiment/releases/download/v0.7.1/adult_preregistration_capsule.json | sha256sum
+# 8d791b1626d524822c0f72c7190353dcf5553cdee3918b57a81d89d33a06c0be
+```
+
+The anchor record carries `publicly_retrievable: true`, and the capsule embeds the complete
+final experiment lock, so it can be read as a specification rather than only hashed.
 
 **The gate passed on one platform.** `full_empirical_replay` requires bit-identical
 continuous-score signatures, which depend on the BLAS build. Verification on other hardware

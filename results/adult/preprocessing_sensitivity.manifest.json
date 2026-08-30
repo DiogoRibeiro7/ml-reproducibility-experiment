@@ -7,21 +7,21 @@
       "doi": "10.24432/C5XW20",
       "external_anchor": {
         "anchor_path": "artifacts/adult_external_anchor.json",
-        "anchor_sha256": "e2c65f00eee0f34b7f6939e7ed3ca740b1d48f977cb4815b0c20e1f718f6f8aa",
-        "asset_name": "adult_preregistration_capsule.json",
+        "anchor_sha256": "7a7895b8def7f7896f9a0b6c3f1475fb9c054187744948e5e6048e4d3eca8009",
+        "asset_name": null,
         "capsule_path": "artifacts/adult_preregistration_capsule.json",
         "capsule_sha256": "8d791b1626d524822c0f72c7190353dcf5553cdee3918b57a81d89d33a06c0be",
-        "immutable_ref": "v0.7.0",
-        "kind": "github_private_release_asset",
-        "publicly_retrievable": false,
+        "immutable_ref": "v0.7.1",
+        "kind": "github_release_asset",
+        "publicly_retrievable": true,
         "remote_capsule_sha256": "8d791b1626d524822c0f72c7190353dcf5553cdee3918b57a81d89d33a06c0be",
-        "url": "https://api.github.com/repos/DiogoRibeiro7/ml-reproducibility-experiment/releases/tags/v0.7.0"
+        "url": "https://github.com/DiogoRibeiro7/ml-reproducibility-experiment/releases/download/v0.7.1/adult_preregistration_capsule.json"
       },
       "files": {
         "adult.data": "5b00264637dbfec36bdeaab5676b0b309ff9eb788d63554ca0a249491c86603d",
         "adult.test": "a2a9044bc167a35b2361efbabec64e89d69ce82d9790d2980119aac5fd7e9c05"
       },
-      "retrieved_at_utc": "2026-08-28T17:59:48.303218+00:00",
+      "retrieved_at_utc": "2026-08-29T21:03:42.656357+00:00",
       "schema": 2
     },
     "doi": "10.24432/C5XW20",
@@ -99,17 +99,17 @@
   "experiment": "preprocessing_sensitivity",
   "external_anchor": {
     "anchor_path": "artifacts/adult_external_anchor.json",
-    "anchor_sha256": "e2c65f00eee0f34b7f6939e7ed3ca740b1d48f977cb4815b0c20e1f718f6f8aa",
-    "asset_name": "adult_preregistration_capsule.json",
+    "anchor_sha256": "7a7895b8def7f7896f9a0b6c3f1475fb9c054187744948e5e6048e4d3eca8009",
+    "asset_name": null,
     "capsule_path": "artifacts/adult_preregistration_capsule.json",
     "capsule_sha256": "8d791b1626d524822c0f72c7190353dcf5553cdee3918b57a81d89d33a06c0be",
-    "immutable_ref": "v0.7.0",
-    "kind": "github_private_release_asset",
-    "publicly_retrievable": false,
+    "immutable_ref": "v0.7.1",
+    "kind": "github_release_asset",
+    "publicly_retrievable": true,
     "remote_capsule_sha256": "8d791b1626d524822c0f72c7190353dcf5553cdee3918b57a81d89d33a06c0be",
-    "url": "https://api.github.com/repos/DiogoRibeiro7/ml-reproducibility-experiment/releases/tags/v0.7.0"
+    "url": "https://github.com/DiogoRibeiro7/ml-reproducibility-experiment/releases/download/v0.7.1/adult_preregistration_capsule.json"
   },
-  "manifest_payload_sha256": "58896285a679ec6da90b8dc79822f24839c08ea4c6426422bdf84cd8779e1927",
+  "manifest_payload_sha256": "2b76c648831a408c89a8c4ba8d171476f981a9c7bf6a6ae20e86375706273137",
   "outputs_sha256": {
     "results/adult/preprocessing_sensitivity.csv": "c3c53e2b334a770877ebde339d24a8ed28142ab599132544c104f1032ce9e618"
   }
