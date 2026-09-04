@@ -2,32 +2,25 @@
 
 from __future__ import annotations
 
-import importlib.util
+import runpy
 from pathlib import Path
-from types import ModuleType
+from typing import Callable, cast
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "scripts" / "render_governance_audit.py"
 REPORT = ROOT / "governance" / "audit_report.md"
 
 
-def _load_renderer() -> ModuleType:
-    """Load the standalone renderer module from its repository path."""
-    spec = importlib.util.spec_from_file_location("render_governance_audit", SCRIPT)
-    if spec is None or spec.loader is None:
-        raise RuntimeError(f"Unable to load renderer module from {SCRIPT}")
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
+def _build_report() -> str:
+    """Render the governance report directly from the standalone script."""
+    namespace = runpy.run_path(str(SCRIPT), run_name="governance_audit_renderer")
+    build_report = cast(Callable[[Path], str], namespace["build_report"])
+    return build_report(ROOT)
 
 
 def test_committed_governance_audit_is_current() -> None:
     """The committed audit report must equal a fresh render of repository evidence."""
-    renderer = _load_renderer()
-    build_report = getattr(renderer, "build_report")
-    generated = build_report(ROOT)
-
-    assert REPORT.read_text(encoding="utf-8") == generated
+    assert REPORT.read_text(encoding="utf-8") == _build_report()
 
 
 def test_governance_audit_surfaces_core_evidence_and_boundaries() -> None:
