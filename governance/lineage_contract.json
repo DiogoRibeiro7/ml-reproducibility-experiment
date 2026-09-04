@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "study": "adult",
+  "dataset_identity": {
+    "doi": "10.24432/C5XW20",
+    "source_files": {
+      "adult.data": "5b00264637dbfec36bdeaab5676b0b309ff9eb788d63554ca0a249491c86603d",
+      "adult.test": "a2a9044bc167a35b2361efbabec64e89d69ce82d9790d2980119aac5fd7e9c05"
+    }
+  },
+  "design_identity": {
+    "design_lock_path": "artifacts/adult_design_lock.json",
+    "design_lock_sha256": "2eb2351f4ae40971a5428c7aa6bbf3f906826ade0f99054abd56e03e3275d7d9",
+    "preregistration_capsule_path": "artifacts/adult_preregistration_capsule.json",
+    "preregistration_capsule_sha256": "8d791b1626d524822c0f72c7190353dcf5553cdee3918b57a81d89d33a06c0be"
+  },
+  "raw_result_families": [
+    {
+      "experiment": "split_sensitivity",
+      "result": "results/adult/split_sensitivity.csv",
+      "manifest": "results/adult/split_sensitivity.manifest.json",
+      "expected_fits": 120
+    },
+    {
+      "experiment": "seed_sensitivity",
+      "result": "results/adult/seed_sensitivity.csv",
+      "manifest": "results/adult/seed_sensitivity.manifest.json",
+      "expected_fits": 120
+    },
+    {
+      "experiment": "preprocessing_sensitivity",
+      "result": "results/adult/preprocessing_sensitivity.csv",
+      "manifest": "results/adult/preprocessing_sensitivity.manifest.json",
+      "expected_fits": 12
+    },
+    {
+      "experiment": "factorial",
+      "result": "results/adult/factorial.csv",
+      "manifest": "results/adult/factorial.manifest.json",
+      "expected_fits": 384
+    }
+  ],
+  "per_fit_lineage_fields": [
+    "experiment",
+    "model",
+    "split_seed",
+    "model_seed",
+    "preprocessing",
+    "n_train",
+    "n_test",
+    "converged",
+    "convergence_warning_count",
+    "n_iter",
+    "accuracy",
+    "balanced_accuracy",
+    "f1",
+    "roc_auc",
+    "score_kind",
+    "n_unique_scores",
+    "score_abs_median",
+    "prediction_sha256",
+    "score_sha256"
+  ],
+  "release_artifacts": {
+    "analysis_manifest": "results/adult/analysis.manifest.json",
+    "primary_release_manifest": "results/adult/primary_release_manifest.json",
+    "release_status": "artifacts/adult_release_status.json",
+    "repository_release_manifest": "artifacts/release_manifest.json"
+  },
+  "scope_boundaries": {
+    "production_model_registry": false,
+    "separate_validation_set_registry": false,
+    "rbac": false,
+    "pii_retention_enforcement": false,
+    "deployment_lineage": false
+  }
+}
