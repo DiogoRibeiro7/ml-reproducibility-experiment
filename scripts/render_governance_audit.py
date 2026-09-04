@@ -7,7 +7,6 @@ import csv
 import hashlib
 import json
 import sys
-from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -32,36 +31,36 @@ def _load_json(path: Path) -> dict[str, Any]:
     return payload
 
 
-def _require_dict(value: object, label: str) -> dict[str, Any]:
-    """Return *value* as a JSON mapping or fail with a useful message."""
+def _as_dict(value: object, label: str) -> dict[str, Any]:
+    """Return *value* as a JSON object or raise a useful error."""
     if not isinstance(value, dict):
         raise TypeError(f"Expected {label} to be an object")
     return value
 
 
-def _require_list(value: object, label: str) -> list[object]:
-    """Return *value* as a JSON array or fail with a useful message."""
+def _as_list(value: object, label: str) -> list[object]:
+    """Return *value* as a JSON array or raise a useful error."""
     if not isinstance(value, list):
         raise TypeError(f"Expected {label} to be an array")
     return value
 
 
-def _require_str(value: object, label: str) -> str:
-    """Return *value* as a string or fail with a useful message."""
+def _as_str(value: object, label: str) -> str:
+    """Return *value* as a string or raise a useful error."""
     if not isinstance(value, str):
         raise TypeError(f"Expected {label} to be a string")
     return value
 
 
-def _require_int(value: object, label: str) -> int:
-    """Return *value* as an integer, rejecting booleans."""
+def _as_int(value: object, label: str) -> int:
+    """Return *value* as an integer while rejecting booleans."""
     if not isinstance(value, int) or isinstance(value, bool):
         raise TypeError(f"Expected {label} to be an integer")
     return value
 
 
-def _require_bool(value: object, label: str) -> bool:
-    """Return *value* as a boolean or fail with a useful message."""
+def _as_bool(value: object, label: str) -> bool:
+    """Return *value* as a boolean or raise a useful error."""
     if not isinstance(value, bool):
         raise TypeError(f"Expected {label} to be a boolean")
     return value
@@ -81,7 +80,7 @@ def _count_csv_rows(path: Path) -> int:
 
 
 def _short_digest(value: str) -> str:
-    """Return a compact digest prefix for diagrams only."""
+    """Return a compact digest prefix for the lineage diagram."""
     return value[:12]
 
 
@@ -90,120 +89,123 @@ def _escape_table(value: str) -> str:
     return value.replace("|", "\\|")
 
 
+def _family_audit(root: Path, family: dict[str, Any]) -> tuple[FamilyAudit, dict[str, Any]]:
+    """Validate one result family and return its audit record and manifest."""
+    experiment = _as_str(family.get("experiment"), "family experiment")
+    result_path = _as_str(family.get("result"), "family result")
+    manifest_path = _as_str(family.get("manifest"), "family manifest")
+    expected_fits = _as_int(family.get("expected_fits"), "expected_fits")
+
+    result_file = root / result_path
+    manifest = _load_json(root / manifest_path)
+    fit_count = _count_csv_rows(result_file)
+    if fit_count != expected_fits:
+        raise ValueError(f"{experiment} has {fit_count} fits; expected {expected_fits}")
+
+    outputs = _as_dict(manifest.get("outputs_sha256"), "outputs_sha256")
+    declared_output = _as_str(outputs.get(result_path), "declared output digest")
+    observed_output = _sha256(result_file)
+    if declared_output != observed_output:
+        raise ValueError(f"Output digest mismatch for {result_path}")
+
+    manifest_experiment = _as_str(manifest.get("experiment"), "manifest experiment")
+    if manifest_experiment != experiment:
+        raise ValueError(f"Manifest experiment mismatch for {manifest_path}")
+
+    audit = FamilyAudit(
+        experiment=experiment,
+        result_path=result_path,
+        manifest_path=manifest_path,
+        fit_count=fit_count,
+        result_sha256=observed_output,
+    )
+    return audit, manifest
+
+
 def build_report(root: Path) -> str:
     """Build the governance audit report from repository evidence."""
     contract = _load_json(root / "governance" / "lineage_contract.json")
     release_status = _load_json(root / "artifacts" / "adult_release_status.json")
 
-    dataset_identity = _require_dict(
-        contract.get("dataset_identity"), "dataset_identity"
-    )
-    design_identity = _require_dict(contract.get("design_identity"), "design_identity")
-    source_files = _require_dict(dataset_identity.get("source_files"), "source_files")
-    families = _require_list(contract.get("raw_result_families"), "raw_result_families")
-    boundaries = _require_dict(contract.get("scope_boundaries"), "scope_boundaries")
+    dataset_identity = _as_dict(contract.get("dataset_identity"), "dataset_identity")
+    design_identity = _as_dict(contract.get("design_identity"), "design_identity")
+    source_files = _as_dict(dataset_identity.get("source_files"), "source_files")
+    family_values = _as_list(contract.get("raw_result_families"), "raw_result_families")
+    boundaries = _as_dict(contract.get("scope_boundaries"), "scope_boundaries")
 
     family_audits: list[FamilyAudit] = []
-    environment_digests: set[str] = set()
-    acquisition_receipts: list[dict[str, Any]] = []
-    common_config_digests: set[str] = set()
-    common_design_digests: set[str] = set()
+    manifests: list[dict[str, Any]] = []
+    for index, value in enumerate(family_values):
+        family = _as_dict(value, f"raw_result_families[{index}]")
+        audit, manifest = _family_audit(root, family)
+        family_audits.append(audit)
+        manifests.append(manifest)
 
-    for index, family_value in enumerate(families):
-        family = _require_dict(family_value, f"raw_result_families[{index}]")
-        experiment = _require_str(family.get("experiment"), "family experiment")
-        result_path = _require_str(family.get("result"), "family result")
-        manifest_path = _require_str(family.get("manifest"), "family manifest")
-        expected_fits = _require_int(family.get("expected_fits"), "expected_fits")
-
-        result_file = root / result_path
-        manifest = _load_json(root / manifest_path)
-        fit_count = _count_csv_rows(result_file)
-        if fit_count != expected_fits:
-            raise ValueError(
-                f"{experiment} has {fit_count} fits; expected {expected_fits}"
-            )
-
-        outputs = _require_dict(manifest.get("outputs_sha256"), "outputs_sha256")
-        declared_output = _require_str(outputs.get(result_path), "declared output digest")
-        observed_output = _sha256(result_file)
-        if declared_output != observed_output:
-            raise ValueError(f"Output digest mismatch for {result_path}")
-
-        manifest_experiment = _require_str(manifest.get("experiment"), "experiment")
-        if manifest_experiment != experiment:
-            raise ValueError(f"Manifest experiment mismatch for {manifest_path}")
-
-        environment_digests.add(
-            _require_str(manifest.get("environment_sha256"), "environment_sha256")
-        )
-        common_config_digests.add(
-            _require_str(manifest.get("config_sha256"), "config_sha256")
-        )
-        common_design_digests.add(
-            _require_str(manifest.get("design_lock_sha256"), "design_lock_sha256")
-        )
-
-        dataset = _require_dict(manifest.get("dataset"), "manifest dataset")
-        acquisition_receipts.append(
-            _require_dict(dataset.get("acquisition_receipt"), "acquisition_receipt")
-        )
-
-        family_audits.append(
-            FamilyAudit(
-                experiment=experiment,
-                result_path=result_path,
-                manifest_path=manifest_path,
-                fit_count=fit_count,
-                result_sha256=observed_output,
-            )
-        )
-
+    config_digests = {
+        _as_str(manifest.get("config_sha256"), "config_sha256")
+        for manifest in manifests
+    }
+    design_digests = {
+        _as_str(manifest.get("design_lock_sha256"), "design_lock_sha256")
+        for manifest in manifests
+    }
+    environment_digests = {
+        _as_str(manifest.get("environment_sha256"), "environment_sha256")
+        for manifest in manifests
+    }
+    if len(config_digests) != 1:
+        raise ValueError("Raw result families do not share one configuration identity")
+    if len(design_digests) != 1:
+        raise ValueError("Raw result families do not share one design identity")
     if len(environment_digests) != 1:
         raise ValueError("Raw result families do not share one environment identity")
-    if len(common_config_digests) != 1:
-        raise ValueError("Raw result families do not share one configuration identity")
-    if len(common_design_digests) != 1:
-        raise ValueError("Raw result families do not share one design identity")
 
+    receipts = []
+    for manifest in manifests:
+        dataset = _as_dict(manifest.get("dataset"), "manifest dataset")
+        receipt = _as_dict(dataset.get("acquisition_receipt"), "acquisition_receipt")
+        receipts.append(receipt)
+    if any(receipt != receipts[0] for receipt in receipts[1:]):
+        raise ValueError("Raw result families do not share one acquisition receipt")
+
+    config_sha256 = next(iter(config_digests))
+    manifest_design_sha256 = next(iter(design_digests))
     environment_sha256 = next(iter(environment_digests))
-    config_sha256 = next(iter(common_config_digests))
-    manifest_design_sha256 = next(iter(common_design_digests))
-    design_sha256 = _require_str(
-        design_identity.get("design_lock_sha256"), "design_lock_sha256"
+    design_sha256 = _as_str(
+        design_identity.get("design_lock_sha256"),
+        "design_lock_sha256",
     )
-    capsule_sha256 = _require_str(
+    capsule_sha256 = _as_str(
         design_identity.get("preregistration_capsule_sha256"),
         "preregistration_capsule_sha256",
     )
     if manifest_design_sha256 != design_sha256:
         raise ValueError("Family manifests do not match the governance design identity")
 
-    first_receipt = acquisition_receipts[0]
-    for receipt in acquisition_receipts[1:]:
-        if receipt != first_receipt:
-            raise ValueError("Raw result families do not share one acquisition receipt")
+    receipt = receipts[0]
+    anchor = _as_dict(receipt.get("external_anchor"), "external_anchor")
+    anchor_ref = _as_str(anchor.get("immutable_ref"), "immutable_ref")
+    retrieved_at = _as_str(receipt.get("retrieved_at_utc"), "retrieved_at_utc")
 
-    anchor = _require_dict(first_receipt.get("external_anchor"), "external_anchor")
-    anchor_ref = _require_str(anchor.get("immutable_ref"), "immutable_ref")
-    retrieved_at = _require_str(first_receipt.get("retrieved_at_utc"), "retrieved_at_utc")
-
-    release_checks = _require_list(release_status.get("checks"), "release checks")
-    passed_checks = 0
+    raw_checks = _as_list(release_status.get("checks"), "release checks")
     check_rows: list[tuple[str, str, str]] = []
-    for index, check_value in enumerate(release_checks):
-        check = _require_dict(check_value, f"checks[{index}]")
-        name = _require_str(check.get("name"), "check name")
-        detail = _require_str(check.get("detail"), "check detail")
-        passed = _require_bool(check.get("passed"), "check passed")
-        passed_checks += int(passed)
+    for index, value in enumerate(raw_checks):
+        check = _as_dict(value, f"checks[{index}]")
+        name = _as_str(check.get("name"), "check name")
+        detail = _as_str(check.get("detail"), "check detail")
+        passed = _as_bool(check.get("passed"), "check passed")
         check_rows.append((name, "PASS" if passed else "FAIL", detail))
 
-    release_authorised = _require_bool(
-        release_status.get("release_authorised"), "release_authorised"
+    passed_checks = sum(status == "PASS" for _, status, _ in check_rows)
+    release_authorised = _as_bool(
+        release_status.get("release_authorised"),
+        "release_authorised",
     )
     total_fits = sum(family.fit_count for family in family_audits)
-    doi = _require_str(dataset_identity.get("doi"), "dataset DOI")
+    doi = _as_str(dataset_identity.get("doi"), "dataset DOI")
+    adult_data_sha256 = _as_str(source_files.get("adult.data"), "adult.data digest")
+    adult_test_sha256 = _as_str(source_files.get("adult.test"), "adult.test digest")
+    gate_status = "PASS" if release_authorised else "FAIL"
 
     lines = [
         "# Governance audit report",
@@ -220,15 +222,18 @@ def build_report(root: Path) -> str:
         f"| External preregistration | `{capsule_sha256}` at `{anchor_ref}` | PASS |",
         f"| Execution environment | `{environment_sha256}` | PASS |",
         f"| Raw fit coverage | {total_fits} committed fits across 4 families | PASS |",
-        f"| Release gate | {passed_checks}/{len(check_rows)} checks passed | "
-        f"{'PASS' if release_authorised else 'FAIL'} |",
+        f"| Release gate | {passed_checks}/{len(check_rows)} checks passed | {gate_status} |",
         "",
         "## Lineage",
         "",
         "```mermaid",
         "flowchart TD",
         f'    D["UCI Adult\\nDOI {doi}"] --> S["Canonical source bytes"]',
-        f'    S --> H["Source SHA-256\\n{_short_digest(_require_str(source_files.get("adult.data"), "adult.data digest"))}... / {_short_digest(_require_str(source_files.get("adult.test"), "adult.test digest"))}..."]',
+        (
+            '    S --> H["Source SHA-256\\n'
+            f"{_short_digest(adult_data_sha256)}... / "
+            f'{_short_digest(adult_test_sha256)}..."]'
+        ),
         f'    H --> L["Frozen design\\n{_short_digest(design_sha256)}..."]',
         f'    L --> P["External preregistration\\n{_short_digest(capsule_sha256)}..."]',
         '    P --> T["Training/test construction\\npreprocessing fitted inside pipeline"]',
@@ -236,7 +241,7 @@ def build_report(root: Path) -> str:
         '    F --> R["Raw result families\\n636 fits + behavioural hashes"]',
         f'    R --> E["Execution environment\\n{_short_digest(environment_sha256)}..."]',
         f'    E --> G["Release gate\\n{passed_checks}/{len(check_rows)} checks"]',
-        "    G --> A[\"Authorised release\"]",
+        '    G --> A["Authorised release"]',
         "```",
         "",
         "## Governed identities",
@@ -244,8 +249,8 @@ def build_report(root: Path) -> str:
         "| Identity | Value |",
         "| --- | --- |",
         f"| Dataset DOI | `{doi}` |",
-        f"| `adult.data` SHA-256 | `{_require_str(source_files.get('adult.data'), 'adult.data digest')}` |",
-        f"| `adult.test` SHA-256 | `{_require_str(source_files.get('adult.test'), 'adult.test digest')}` |",
+        f"| `adult.data` SHA-256 | `{adult_data_sha256}` |",
+        f"| `adult.test` SHA-256 | `{adult_test_sha256}` |",
         f"| Design-lock SHA-256 | `{design_sha256}` |",
         f"| Preregistration capsule SHA-256 | `{capsule_sha256}` |",
         f"| Configuration SHA-256 | `{config_sha256}` |",
@@ -278,8 +283,8 @@ def build_report(root: Path) -> str:
             "```text",
         ]
     )
-    per_fit_fields = _require_list(contract.get("per_fit_lineage_fields"), "per-fit fields")
-    lines.extend(_require_str(field, "per-fit field") for field in per_fit_fields)
+    fields = _as_list(contract.get("per_fit_lineage_fields"), "per-fit fields")
+    lines.extend(_as_str(field, "per-fit field") for field in fields)
     lines.extend(
         [
             "```",
@@ -291,9 +296,7 @@ def build_report(root: Path) -> str:
         ]
     )
     for name, status, detail in check_rows:
-        lines.append(
-            f"| `{name}` | **{status}** | {_escape_table(detail)} |"
-        )
+        lines.append(f"| `{name}` | **{status}** | {_escape_table(detail)} |")
 
     lines.extend(
         [
@@ -307,10 +310,9 @@ def build_report(root: Path) -> str:
         ]
     )
     for capability, implemented in boundaries.items():
-        state = _require_bool(implemented, f"scope boundary {capability}")
-        lines.append(
-            f"| `{capability}` | {'Yes' if state else '**No**'} |"
-        )
+        state = _as_bool(implemented, f"scope boundary {capability}")
+        value = "Yes" if state else "**No**"
+        lines.append(f"| `{capability}` | {value} |")
 
     lines.extend(
         [
@@ -329,7 +331,7 @@ def build_report(root: Path) -> str:
     return "\n".join(lines) + "\n"
 
 
-def main(argv: Sequence[str] | None = None) -> int:
+def main(argv: list[str] | None = None) -> int:
     """Render the report, or verify that the committed report is current."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -354,10 +356,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             print(f"Missing generated report: {output}", file=sys.stderr)
             return 1
         if output.read_text(encoding="utf-8") != report:
-            print(
-                f"Generated governance report is stale: {output}",
-                file=sys.stderr,
-            )
+            print(f"Generated governance report is stale: {output}", file=sys.stderr)
             return 1
         print(f"Governance report is current: {output.relative_to(root)}")
         return 0
