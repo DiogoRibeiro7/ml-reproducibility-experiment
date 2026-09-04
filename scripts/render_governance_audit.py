@@ -202,6 +202,8 @@ def build_report(root: Path) -> str:
         "release_authorised",
     )
     total_fits = sum(family.fit_count for family in family_audits)
+    family_count = len(family_audits)
+    source_count = len(source_files)
     doi = _as_str(dataset_identity.get("doi"), "dataset DOI")
     adult_data_sha256 = _as_str(source_files.get("adult.data"), "adult.data digest")
     adult_test_sha256 = _as_str(source_files.get("adult.test"), "adult.test digest")
@@ -217,11 +219,17 @@ def build_report(root: Path) -> str:
         "",
         "| Control | Evidence | Status |",
         "| --- | --- | --- |",
-        f"| Dataset identity | UCI Adult DOI `{doi}` + 2 source SHA-256 values | PASS |",
+        (
+            f"| Dataset identity | UCI Adult DOI `{doi}` + {source_count} source "
+            "SHA-256 values | PASS |"
+        ),
         f"| Frozen design | `{design_sha256}` | PASS |",
         f"| External preregistration | `{capsule_sha256}` at `{anchor_ref}` | PASS |",
         f"| Execution environment | `{environment_sha256}` | PASS |",
-        f"| Raw fit coverage | {total_fits} committed fits across 4 families | PASS |",
+        (
+            f"| Raw fit coverage | {total_fits} committed fits across {family_count} "
+            "families | PASS |"
+        ),
         f"| Release gate | {passed_checks}/{len(check_rows)} checks passed | {gate_status} |",
         "",
         "## Lineage",
@@ -238,7 +246,7 @@ def build_report(root: Path) -> str:
         f'    L --> P["External preregistration\\n{_short_digest(capsule_sha256)}..."]',
         '    P --> T["Training/test construction\\npreprocessing fitted inside pipeline"]',
         '    T --> F["Per-fit lineage\\nmodel + split seed + model seed + preprocessing"]',
-        '    F --> R["Raw result families\\n636 fits + behavioural hashes"]',
+        f'    F --> R["Raw result families\\n{total_fits} fits + behavioural hashes"]',
         f'    R --> E["Execution environment\\n{_short_digest(environment_sha256)}..."]',
         f'    E --> G["Release gate\\n{passed_checks}/{len(check_rows)} checks"]',
         '    G --> A["Authorised release"]',
@@ -349,6 +357,7 @@ def main(argv: list[str] | None = None) -> int:
 
     root = Path(__file__).resolve().parents[1]
     output = args.output if args.output.is_absolute() else root / args.output
+    display_output = output.relative_to(root) if output.is_relative_to(root) else output
     report = build_report(root)
 
     if args.check:
@@ -358,12 +367,12 @@ def main(argv: list[str] | None = None) -> int:
         if output.read_text(encoding="utf-8") != report:
             print(f"Generated governance report is stale: {output}", file=sys.stderr)
             return 1
-        print(f"Governance report is current: {output.relative_to(root)}")
+        print(f"Governance report is current: {display_output}")
         return 0
 
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(report, encoding="utf-8")
-    print(f"Wrote {output.relative_to(root)}")
+    print(f"Wrote {display_output}")
     return 0
 
 
