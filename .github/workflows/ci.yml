@@ -30,6 +30,8 @@ jobs:
         run: mypy src
       - name: Tests
         run: pytest
+      - name: Verify generated governance audit
+        run: python scripts/render_governance_audit.py --check
       - name: Verify smoke design lock
         run: ml-repro --root . verify-design-lock --config configs/smoke.yml
       - name: Execute smoke study
