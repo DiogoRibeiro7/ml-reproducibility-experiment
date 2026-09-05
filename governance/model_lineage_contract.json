@@ -23,6 +23,9 @@
     "balanced_accuracy",
     "f1",
     "roc_auc",
+    "score_kind",
+    "n_unique_scores",
+    "score_abs_median",
     "converged",
     "convergence_warning_count",
     "n_iter"
@@ -35,7 +38,7 @@
     "deployment_endpoint_lineage": false
   },
   "notes": [
-    "The frozen study persists behavioural and metric evidence for each fit, not estimator binaries.",
+    "The frozen study persists behavioural, score-diagnostic, and metric evidence for each fit, not estimator binaries.",
     "Code identity is represented by the frozen design-lock digest rather than a retroactively added Git commit field.",
     "A repeated training specification may appear in more than one experimental family; execution_spec_id includes the experiment family so those executions remain distinguishable."
   ]
