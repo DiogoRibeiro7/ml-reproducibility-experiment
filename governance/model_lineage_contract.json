@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "study": "adult",
+  "semantics": "executed-fit lineage identity; not a persisted trained-model artifact registry",
+  "source_contracts": {
+    "dataset_and_run_lineage": "governance/lineage_contract.json",
+    "partition_governance": "governance/partition_contract.json",
+    "frozen_experiment": "artifacts/adult_final_experiment_lock.json"
+  },
+  "identity_layers": {
+    "partition_spec_id": "SHA-256 of the governed train/test partition specification for the split seed",
+    "preprocessing_spec_id": "SHA-256 of the frozen preprocessing specification",
+    "model_spec_id": "SHA-256 of estimator class plus effective hyperparameters; stochastic random_state is replaced by the declared model seed",
+    "training_spec_id": "SHA-256 binding dataset/design identity, partition specification, preprocessing specification, model specification, and declared model seed",
+    "execution_spec_id": "SHA-256 binding training specification to experiment family, config, observed environment, and execution policy",
+    "fit_evidence_id": "SHA-256 binding the execution specification to the complete committed result row and family-manifest identity"
+  },
+  "expected_fit_records": 636,
+  "result_evidence_fields": [
+    "prediction_sha256",
+    "score_sha256",
+    "accuracy",
+    "balanced_accuracy",
+    "f1",
+    "roc_auc",
+    "converged",
+    "convergence_warning_count",
+    "n_iter"
+  ],
+  "canonicalisation": "UTF-8 JSON with sorted keys and separators=(',', ':')",
+  "scope_boundaries": {
+    "trained_model_binary_persisted": false,
+    "production_model_registry": false,
+    "approval_state_lineage": false,
+    "deployment_endpoint_lineage": false
+  },
+  "notes": [
+    "The frozen study persists behavioural and metric evidence for each fit, not estimator binaries.",
+    "Code identity is represented by the frozen design-lock digest rather than a retroactively added Git commit field.",
+    "A repeated training specification may appear in more than one experimental family; execution_spec_id includes the experiment family so those executions remain distinguishable."
+  ]
+}
