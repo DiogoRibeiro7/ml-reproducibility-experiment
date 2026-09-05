@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import csv
 import json
 import runpy
 from collections import Counter
@@ -12,6 +13,18 @@ from typing import Any, cast
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "scripts" / "render_model_lineage.py"
 CONTRACT = ROOT / "governance" / "model_lineage_contract.json"
+RAW_RESULTS = (
+    ROOT / "results" / "adult" / "split_sensitivity.csv",
+    ROOT / "results" / "adult" / "seed_sensitivity.csv",
+    ROOT / "results" / "adult" / "preprocessing_sensitivity.csv",
+    ROOT / "results" / "adult" / "factorial.csv",
+)
+
+
+def _load_contract() -> dict[str, Any]:
+    payload: Any = json.loads(CONTRACT.read_text(encoding="utf-8"))
+    assert isinstance(payload, dict)
+    return payload
 
 
 def _build_records() -> list[dict[str, object]]:
@@ -57,9 +70,17 @@ def test_lineage_layers_are_present_for_every_fit() -> None:
             assert str(record[field]).startswith("sha256:")
 
 
+def test_declared_result_evidence_fields_exist_in_every_raw_family() -> None:
+    declared = set(_load_contract()["result_evidence_fields"])
+    for path in RAW_RESULTS:
+        with path.open("r", encoding="utf-8", newline="") as handle:
+            reader = csv.DictReader(handle)
+            assert reader.fieldnames is not None
+            assert declared.issubset(reader.fieldnames)
+
+
 def test_model_lineage_contract_keeps_production_boundaries_explicit() -> None:
-    payload: Any = json.loads(CONTRACT.read_text(encoding="utf-8"))
-    assert isinstance(payload, dict)
+    payload = _load_contract()
     assert payload["expected_fit_records"] == 636
     assert payload["scope_boundaries"] == {
         "trained_model_binary_persisted": False,
