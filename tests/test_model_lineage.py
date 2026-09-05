@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import json
 import runpy
 from collections import Counter
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable, cast
+from typing import Any, cast
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "scripts" / "render_model_lineage.py"
@@ -56,8 +58,6 @@ def test_lineage_layers_are_present_for_every_fit() -> None:
 
 
 def test_model_lineage_contract_keeps_production_boundaries_explicit() -> None:
-    import json
-
     payload: Any = json.loads(CONTRACT.read_text(encoding="utf-8"))
     assert isinstance(payload, dict)
     assert payload["expected_fit_records"] == 636
