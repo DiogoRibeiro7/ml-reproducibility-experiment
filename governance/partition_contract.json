@@ -47,8 +47,8 @@
   "partition_spec_id": {
     "algorithm": "sha256",
     "canonical_payload_fields": [
-      "dataset source SHA-256 values",
-      "design-lock SHA-256",
+      "dataset_source_sha256",
+      "design_lock_sha256",
       "splitter",
       "test_size",
       "stratified_on_target",
@@ -57,7 +57,9 @@
       "n_train",
       "n_test"
     ],
-    "canonicalisation": "UTF-8 JSON with sorted keys and separators=(',', ':')"
+    "canonicalisation": "UTF-8 JSON with sorted keys and separators=(',', ':')",
+    "baseline_split_seed": 1729,
+    "baseline_partition_spec_id": "sha256:c5e96bffb4fcbf1b2cd86a58b6d465a0cb1332a8bc42bfd1bed118382b057c61"
   },
   "validation_partition": {
     "present": false,
