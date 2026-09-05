@@ -95,6 +95,7 @@ def test_committed_fits_match_governed_partition_usage() -> None:
     observed_seeds = {int(row["split_seed"]) for row in rows}
     declared = contract["declared_split_seeds"]
     expected_seeds = set(range(declared["minimum"], declared["maximum"] + 1))
+    assert len(expected_seeds) == declared["count"]
     assert observed_seeds == expected_seeds
 
     assert {int(row["n_train"]) for row in rows} == {procedure["n_train"]}
