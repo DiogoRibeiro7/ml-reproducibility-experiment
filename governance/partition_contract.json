@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "study": "adult",
+  "semantics": "partition specification identity; not a row-membership digest",
+  "dataset_identity": {
+    "doi": "10.24432/C5XW20",
+    "source_files": {
+      "adult.data": "5b00264637dbfec36bdeaab5676b0b309ff9eb788d63554ca0a249491c86603d",
+      "adult.test": "a2a9044bc167a35b2361efbabec64e89d69ce82d9790d2980119aac5fd7e9c05"
+    },
+    "n_rows": 48842
+  },
+  "design_lock_sha256": "2eb2351f4ae40971a5428c7aa6bbf3f906826ade0f99054abd56e03e3275d7d9",
+  "split_procedure": {
+    "method": "repeated stratified hold-out",
+    "splitter": "sklearn.model_selection.train_test_split",
+    "test_size": 0.25,
+    "stratified_on_target": true,
+    "split_controlled_by": "split_seed",
+    "n_train": 36631,
+    "n_test": 12211
+  },
+  "declared_split_seeds": {
+    "minimum": 1729,
+    "maximum": 1758,
+    "count": 30
+  },
+  "usage_by_experiment": {
+    "split_sensitivity": {
+      "split_seeds": {"minimum": 1729, "maximum": 1758, "count": 30},
+      "fits": 120
+    },
+    "seed_sensitivity": {
+      "split_seeds": [1729],
+      "fits": 120
+    },
+    "preprocessing_sensitivity": {
+      "split_seeds": [1729],
+      "fits": 12
+    },
+    "factorial": {
+      "split_seeds": {"minimum": 1729, "maximum": 1736, "count": 8},
+      "fits": 384
+    }
+  },
+  "total_referenced_fits": 636,
+  "partition_spec_id": {
+    "algorithm": "sha256",
+    "canonical_payload_fields": [
+      "dataset source SHA-256 values",
+      "design-lock SHA-256",
+      "splitter",
+      "test_size",
+      "stratified_on_target",
+      "split_seed",
+      "n_rows",
+      "n_train",
+      "n_test"
+    ],
+    "canonicalisation": "UTF-8 JSON with sorted keys and separators=(',', ':')"
+  },
+  "validation_partition": {
+    "present": false,
+    "note": "The frozen study defines train/test hold-out only; no separate validation partition is governed."
+  },
+  "membership_hashes": {
+    "present": false,
+    "reason": "The raw Adult source bytes are intentionally excluded from Git. This contract governs the deterministic split specification and its use by committed fits; it does not claim persisted train/test row-membership digests."
+  }
+}
