@@ -1,0 +1,151 @@
+{
+  "schema_version": 1,
+  "study": "adult",
+  "semantics": "evidence-backed governance risk register for the completed study; residual states describe repository evidence and boundaries, not organizational risk acceptance",
+  "allowed_residual_states": [
+    "mitigated_not_eliminated",
+    "open",
+    "bounded_by_scope"
+  ],
+  "allowed_treatments": [
+    "mitigate",
+    "document",
+    "successor_study"
+  ],
+  "risks": [
+    {
+      "risk_id": "RISK-01",
+      "risk_statement": "The preregistration has one externally immutable hosting anchor, leaving a single-platform trust dependency.",
+      "category": "provenance_and_assurance",
+      "evidence": [
+        "artifacts/adult_external_anchor.json",
+        "ROADMAP.md",
+        "docs/CHANGE_CONTROL.md"
+      ],
+      "mitigating_controls": ["DESIGN-02", "CHANGE-01"],
+      "treatment": "mitigate",
+      "current_mitigation": "CI validates the protected scientific tree against the immutable v0.7.1 GitHub release and its release-asset digest rather than trusting mutable working-tree hashes.",
+      "residual_state": "open",
+      "residual_risk": "Loss, compromise, or policy change at the single external hosting platform would weaken independent availability and trust diversity; the roadmap therefore calls for a second DOI-backed anchor under separate institutional control.",
+      "next_evidence_step": "Add a second independently controlled immutable anchor for the same preregistration capsule bytes."
+    },
+    {
+      "risk_id": "RISK-02",
+      "risk_statement": "Bit-identical continuous-score signatures can diverge across BLAS or hardware platforms even when higher-level results reproduce.",
+      "category": "reproducibility_boundary",
+      "evidence": [
+        "ROADMAP.md",
+        "environment/runtime-policy.json",
+        "governance/control_catalog.json"
+      ],
+      "mitigating_controls": ["EXEC-01", "ASSURE-01"],
+      "treatment": "document",
+      "current_mitigation": "The reference environment is pinned and recorded, and the release gate intentionally detects score-signature divergence rather than silently tolerating it.",
+      "residual_state": "mitigated_not_eliminated",
+      "residual_risk": "A legitimate cross-platform numerical difference can initially look the same as tampering until the divergence is interpreted in context.",
+      "next_evidence_step": "Document worked cross-platform divergence examples or design platform as an explicit factor in a successor study."
+    },
+    {
+      "risk_id": "RISK-03",
+      "risk_statement": "Train/test governance identifies deterministic partition specifications but does not persist row-membership digests or a separate validation-set registry.",
+      "category": "dataset_partition_governance",
+      "evidence": [
+        "governance/partition_contract.json",
+        "docs/PARTITION_GOVERNANCE.md",
+        "governance/control_catalog.json"
+      ],
+      "mitigating_controls": ["PART-01", "SCOPE-01"],
+      "treatment": "document",
+      "current_mitigation": "The exact source identity, split algorithm, seed, train/test sizes, and fit-to-seed usage are governed and regression-tested, while the missing row-membership evidence is explicitly disclosed.",
+      "residual_state": "bounded_by_scope",
+      "residual_risk": "The repository cannot claim prospectively persisted row-level partition lineage or a governed validation registry for the completed study.",
+      "next_evidence_step": "If row-level membership governance is required, include prospective membership digests and validation-set identity in a successor study rather than backfilling them retrospectively."
+    },
+    {
+      "risk_id": "RISK-04",
+      "risk_statement": "Executed-fit lineage does not include persisted trained estimator binaries, model approval states, aliases, or deployment endpoints.",
+      "category": "model_lifecycle_governance",
+      "evidence": [
+        "governance/model_lineage_contract.json",
+        "docs/MODEL_LINEAGE.md",
+        "governance/control_catalog.json"
+      ],
+      "mitigating_controls": ["LINEAGE-01", "SCOPE-01"],
+      "treatment": "document",
+      "current_mitigation": "Every committed fit has deterministic executed-fit lineage through partition, preprocessing, model specification, environment, behavioural signatures, and metrics, with production-registry non-claims made explicit.",
+      "residual_state": "bounded_by_scope",
+      "residual_risk": "This repository cannot demonstrate production model-registry governance, promotion approvals, rollback lineage, or deployment traceability.",
+      "next_evidence_step": "Use a production MLOps system with persisted model artifacts and approval/deployment lineage when those controls are in scope."
+    },
+    {
+      "risk_id": "RISK-05",
+      "risk_statement": "Scientific conclusions are based on one dataset and four classical estimators, limiting external generalisability.",
+      "category": "scientific_validity",
+      "evidence": [
+        "README.md",
+        "ROADMAP.md"
+      ],
+      "mitigating_controls": ["ASSURE-01", "SCOPE-01"],
+      "treatment": "successor_study",
+      "current_mitigation": "The current release is prospectively frozen, fully reconstructed, and its scope limitation is stated rather than generalized beyond the evidence.",
+      "residual_state": "open",
+      "residual_risk": "The observed reproducibility behaviour may be specific to Adult, tabular data, or the selected estimators.",
+      "next_evidence_step": "Run a new prospectively frozen multi-dataset study rather than extending the completed release in place."
+    },
+    {
+      "risk_id": "RISK-06",
+      "risk_statement": "The study repository does not implement enterprise access control, privacy-retention enforcement, consent governance, or deployment security controls.",
+      "category": "enterprise_governance_boundary",
+      "evidence": [
+        "governance/lineage_contract.json",
+        "docs/GOVERNANCE.md",
+        "governance/control_catalog.json"
+      ],
+      "mitigating_controls": ["SCOPE-01"],
+      "treatment": "document",
+      "current_mitigation": "Negative capability statements prevent the scientific governance evidence from being presented as RBAC, privacy, retention, consent, or deployment-security evidence.",
+      "residual_state": "bounded_by_scope",
+      "residual_risk": "The repository is unsuitable as evidence that those enterprise controls exist or operate effectively.",
+      "next_evidence_step": "Assess those controls in the organizational data platform and production MLOps environment, not in this completed research repository."
+    },
+    {
+      "risk_id": "RISK-07",
+      "risk_statement": "Framework cross-references could be misread as proof of NIST conformance, ISO/IEC 42001 certification, or EU AI Act compliance.",
+      "category": "governance_overclaim",
+      "evidence": [
+        "governance/control_catalog.json",
+        "docs/GOVERNANCE_CONTROL_MATRIX.md",
+        "tests/test_control_catalog.py"
+      ],
+      "mitigating_controls": ["SCOPE-01"],
+      "treatment": "mitigate",
+      "current_mitigation": "The catalog defines all framework mappings as descriptive crosswalks, and regression tests preserve explicit non-compliance and non-certification language.",
+      "residual_state": "mitigated_not_eliminated",
+      "residual_risk": "A reader can still misuse descriptive mappings if the caveats are removed from downstream presentations or summaries.",
+      "next_evidence_step": "Keep the non-conformance wording adjacent to every derived framework crosswalk or interview artifact."
+    },
+    {
+      "risk_id": "RISK-08",
+      "risk_statement": "A later repository change could attempt to redefine the completed scientific release or rewrite historical evidence.",
+      "category": "change_and_record_integrity",
+      "evidence": [
+        "governance/change_control_policy.json",
+        "scripts/verify_change_control.py",
+        "tests/test_change_control.py",
+        ".github/workflows/ci.yml"
+      ],
+      "mitigating_controls": ["CHANGE-01", "DESIGN-02"],
+      "treatment": "mitigate",
+      "current_mitigation": "CI compares protected scientific identity against the immutable external preregistration release, rejects frozen-file drift and identity-path divergence, and keeps deviations additive rather than rewriting frozen documents.",
+      "residual_state": "mitigated_not_eliminated",
+      "residual_risk": "Repository-level controls reduce accidental or ordinary in-place redefinition but do not substitute for organizational repository permissions, segregation of duties, or independent archival custody.",
+      "next_evidence_step": "Combine repository controls with organizational access governance and a second independent archival anchor where required."
+    }
+  ],
+  "governance_boundary": {
+    "risk_acceptance_authority_recorded": false,
+    "organizational_risk_owner_recorded": false,
+    "formal_enterprise_risk_rating_claimed": false,
+    "note": "The register records evidenced risks, mitigations, and residual boundaries. It does not invent organizational owners, approvals, appetite, acceptance decisions, or formal risk scores."
+  }
+}
