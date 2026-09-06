@@ -1,0 +1,120 @@
+{
+  "schema_version": 1,
+  "study": "adult",
+  "semantics": "structured governance assurance argument for repository-supported claims; not a compliance opinion, certification, audit opinion, or organizational risk acceptance",
+  "claims": [
+    {
+      "claim_id": "CLAIM-01",
+      "claim": "The study's primary dataset identity and acquisition provenance are traceable to immutable source identifiers and cryptographic hashes.",
+      "controls": ["DATA-01", "DATA-02"],
+      "risks": ["RISK-01", "RISK-06"],
+      "evidence": [
+        "governance/lineage_contract.json",
+        "artifacts/adult_final_experiment_lock.json",
+        "artifacts/adult_external_anchor.json",
+        "docs/GOVERNANCE.md"
+      ],
+      "qualification": "This supports scientific data provenance and content identity only; it does not demonstrate enterprise access approval, privacy, consent, retention, or lawful-basis governance."
+    },
+    {
+      "claim_id": "CLAIM-02",
+      "claim": "The completed scientific specification cannot be silently amended in place without detection by repository CI.",
+      "controls": ["DESIGN-01", "DESIGN-02", "CHANGE-01"],
+      "risks": ["RISK-01", "RISK-08"],
+      "evidence": [
+        "artifacts/adult_design_lock.json",
+        "artifacts/adult_preregistration_capsule.json",
+        "governance/change_control_policy.json",
+        "scripts/verify_change_control.py",
+        "tests/test_change_control.py",
+        ".github/workflows/ci.yml"
+      ],
+      "qualification": "This is repository-level scientific change control; it does not replace organizational repository permissions, segregation of duties, formal approval authorities, or independent archival custody."
+    },
+    {
+      "claim_id": "CLAIM-03",
+      "claim": "Train/test partition specification and usage are governed and reconstructable for all committed fits.",
+      "controls": ["PART-01"],
+      "risks": ["RISK-03"],
+      "evidence": [
+        "governance/partition_contract.json",
+        "tests/test_partition_governance.py",
+        "docs/PARTITION_GOVERNANCE.md"
+      ],
+      "qualification": "The repository does not contain prospectively persisted row-membership digests or a separately governed validation-set registry."
+    },
+    {
+      "claim_id": "CLAIM-04",
+      "claim": "Each committed model execution has deterministic fit-level lineage through partition, preprocessing, model specification, environment, and observed result evidence.",
+      "controls": ["LINEAGE-01", "RESULT-01"],
+      "risks": ["RISK-04"],
+      "evidence": [
+        "governance/model_lineage_contract.json",
+        "scripts/render_model_lineage.py",
+        "tests/test_model_lineage.py",
+        "results/adult/primary_release_manifest.json"
+      ],
+      "qualification": "Executed-fit lineage is not a production model registry: estimator binaries, approval states, aliases, deployment endpoints, and rollback lineage are not stored."
+    },
+    {
+      "claim_id": "CLAIM-05",
+      "claim": "The reference execution environment and numerical-behaviour evidence are recorded strongly enough to detect important reproducibility divergence.",
+      "controls": ["EXEC-01", "RESULT-01"],
+      "risks": ["RISK-02"],
+      "evidence": [
+        "environment/runtime-policy.json",
+        "environment/requirements.lock.txt",
+        "results/adult/split_sensitivity.manifest.json",
+        "governance/model_lineage_contract.json"
+      ],
+      "qualification": "Bit-identical continuous-score signatures can remain platform-sensitive across BLAS or hardware boundaries; detected divergence still requires interpretation."
+    },
+    {
+      "claim_id": "CLAIM-06",
+      "claim": "Release authorisation is backed by independent reconstruction of the configured fits rather than artifact-to-artifact consistency alone.",
+      "controls": ["ASSURE-01"],
+      "risks": ["RISK-02", "RISK-05"],
+      "evidence": [
+        "artifacts/adult_release_status.json",
+        "RELEASE_VALIDATION.md",
+        "governance/audit_report.md"
+      ],
+      "qualification": "This is scientific release assurance, not an external conformity assessment, regulatory certification, or independent audit opinion."
+    },
+    {
+      "claim_id": "CLAIM-07",
+      "claim": "The repository explicitly records material governance and scientific residual risks instead of presenting controls as complete risk elimination.",
+      "controls": ["SCOPE-01", "CHANGE-01"],
+      "risks": ["RISK-01", "RISK-02", "RISK-03", "RISK-04", "RISK-05", "RISK-06", "RISK-07", "RISK-08"],
+      "evidence": [
+        "governance/risk_register.json",
+        "docs/GOVERNANCE_RISK_REGISTER.md",
+        "governance/control_catalog.json"
+      ],
+      "qualification": "The register does not invent formal enterprise risk scores, organizational owners, risk appetite, acceptance decisions, or approval authority."
+    },
+    {
+      "claim_id": "CLAIM-08",
+      "claim": "Framework cross-references are traceable to implemented controls while remaining explicitly descriptive rather than compliance claims.",
+      "controls": ["SCOPE-01"],
+      "risks": ["RISK-07"],
+      "evidence": [
+        "governance/control_catalog.json",
+        "docs/GOVERNANCE_CONTROL_MATRIX.md",
+        "tests/test_control_catalog.py"
+      ],
+      "qualification": "The repository does not claim NIST conformance, ISO/IEC 42001 certification, EU AI Act compliance, or that this study is a regulated high-risk AI system."
+    }
+  ],
+  "unsupported_claims": [
+    "enterprise RBAC or privileged-access governance",
+    "privacy, consent, retention, or lawful-basis compliance",
+    "production model registry and approval workflow",
+    "deployment or rollback lineage",
+    "formal organizational risk acceptance",
+    "NIST AI RMF conformance",
+    "ISO/IEC 42001 certification",
+    "EU AI Act compliance",
+    "independent audit or conformity-assessment opinion"
+  ]
+}
