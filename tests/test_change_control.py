@@ -92,7 +92,7 @@ def test_modified_frozen_file_is_rejected(tmp_path: Path) -> None:
         raise AssertionError("Modified frozen scientific file was accepted")
 
 
-def test_rewritten_local_lock_and_policy_cannot_redefine_release(tmp_path: Path) -> None:
+def test_rewritten_local_lock_cannot_redefine_release(tmp_path: Path) -> None:
     root = tmp_path / "repo"
     _copy_verifier_fixture(root)
 
@@ -106,17 +106,59 @@ def test_rewritten_local_lock_and_policy_cannot_redefine_release(tmp_path: Path)
     design_lock["files_sha256"]["configs/adult.yml"] = sha256(locked)
     design_lock_path.write_text(json.dumps(design_lock, indent=2) + "\n", encoding="utf-8")
 
-    policy_path = root / "governance" / "change_control_policy.json"
-    policy = _load_json(policy_path)
-    policy["current_release_identity"]["design_lock_sha256"] = sha256(design_lock_path)
-    policy_path.write_text(json.dumps(policy, indent=2) + "\n", encoding="utf-8")
-
     try:
         _verify_against_local_capsule(root)
     except ValueError as exc:
         assert "immutable release identity" in str(exc) or "immutable preregistration" in str(exc)
     else:
         raise AssertionError("Rewritten local lock redefined the immutable release")
+
+
+def test_rewritten_policy_identity_is_rejected(tmp_path: Path) -> None:
+    root = tmp_path / "repo"
+    _copy_verifier_fixture(root)
+
+    policy_path = root / "governance" / "change_control_policy.json"
+    policy = _load_json(policy_path)
+    policy["current_release_identity"]["design_lock_sha256"] = "0" * 64
+    policy_path.write_text(json.dumps(policy, indent=2) + "\n", encoding="utf-8")
+
+    try:
+        _verify_against_local_capsule(root)
+    except ValueError as exc:
+        assert "policy disagrees with immutable design identity" in str(exc)
+    else:
+        raise AssertionError("Rewritten policy identity was accepted")
+
+
+def test_machine_readable_artifact_paths_are_enforced(tmp_path: Path) -> None:
+    root = tmp_path / "repo"
+    _copy_verifier_fixture(root)
+
+    policy_path = root / "governance" / "change_control_policy.json"
+    policy = _load_json(policy_path)
+    policy["current_release_identity"]["design_lock_path"] = "artifacts/other_lock.json"
+    policy_path.write_text(json.dumps(policy, indent=2) + "\n", encoding="utf-8")
+
+    try:
+        _verify_against_local_capsule(root)
+    except ValueError as exc:
+        assert "wrong design-lock artifact path" in str(exc)
+    else:
+        raise AssertionError("Divergent policy artifact path was accepted")
+
+    _copy_verifier_fixture(root)
+    lineage_path = root / "governance" / "lineage_contract.json"
+    lineage = _load_json(lineage_path)
+    lineage["design_identity"]["preregistration_capsule_path"] = "artifacts/other.json"
+    lineage_path.write_text(json.dumps(lineage, indent=2) + "\n", encoding="utf-8")
+
+    try:
+        _verify_against_local_capsule(root)
+    except ValueError as exc:
+        assert "wrong preregistration-capsule path" in str(exc)
+    else:
+        raise AssertionError("Divergent lineage artifact path was accepted")
 
 
 def test_frozen_path_escape_is_rejected(tmp_path: Path) -> None:
