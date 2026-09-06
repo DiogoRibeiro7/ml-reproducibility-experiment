@@ -1,0 +1,101 @@
+{
+  "schema_version": 1,
+  "study": "adult",
+  "purpose": "Classify repository changes and preserve the completed study's frozen scientific identity.",
+  "current_release_identity": {
+    "design_lock_path": "artifacts/adult_design_lock.json",
+    "design_lock_sha256": "2eb2351f4ae40971a5428c7aa6bbf3f906826ade0f99054abd56e03e3275d7d9",
+    "preregistration_capsule_path": "artifacts/adult_preregistration_capsule.json",
+    "preregistration_capsule_sha256": "8d791b1626d524822c0f72c7190353dcf5553cdee3918b57a81d89d33a06c0be",
+    "external_anchor_ref": "v0.7.1"
+  },
+  "change_classes": {
+    "scientific_specification": {
+      "source": "Every path listed in artifacts/adult_design_lock.json:files_sha256",
+      "policy": "The completed study must not be amended in place.",
+      "required_actions": [
+        "define a successor study identity",
+        "create a new design lock",
+        "create a new preregistration capsule",
+        "create a new immutable external anchor before primary data acquisition",
+        "perform fresh primary data acquisition under the new anchor",
+        "perform a fresh full execution and release gate",
+        "do not reuse the previous release's results as results of the new specification"
+      ]
+    },
+    "published_evidence": {
+      "paths": [
+        "artifacts/adult_design_lock.json",
+        "artifacts/adult_external_anchor.json",
+        "artifacts/adult_final_experiment_lock.json",
+        "artifacts/adult_preregistration_capsule.json",
+        "artifacts/adult_preregistration_capsule.json.sha256",
+        "artifacts/adult_release_status.json",
+        "artifacts/release_manifest.json"
+      ],
+      "prefixes": [
+        "results/adult/"
+      ],
+      "policy": "Historical evidence is not rewritten to make the completed study agree with a later interpretation.",
+      "required_actions": [
+        "record discovered deviations additively",
+        "state the effect on claims",
+        "use a fresh execution or successor study when scientific claims must change"
+      ]
+    },
+    "governance_overlay": {
+      "prefixes": [
+        "governance/",
+        "tests/",
+        "scripts/"
+      ],
+      "paths": [
+        "docs/GOVERNANCE.md",
+        "docs/PARTITION_GOVERNANCE.md",
+        "docs/MODEL_LINEAGE.md",
+        "docs/CHANGE_CONTROL.md"
+      ],
+      "policy": "May strengthen auditability without changing the frozen experiment.",
+      "required_actions": [
+        "keep governance claims grounded in committed evidence",
+        "preserve explicit scope boundaries",
+        "pass regression and CI checks"
+      ]
+    },
+    "operational_automation": {
+      "prefixes": [
+        ".github/workflows/"
+      ],
+      "paths": [
+        "Makefile"
+      ],
+      "policy": "May improve automation around the release but must not redefine or weaken the frozen scientific gate.",
+      "required_actions": [
+        "preserve the Adult frozen-file boundary",
+        "do not weaken full empirical replay",
+        "keep release evidence historically attributable"
+      ]
+    },
+    "release_documentation": {
+      "paths": [
+        "README.md",
+        "RELEASE_VALIDATION.md",
+        "ROADMAP.md",
+        "CITATION.cff",
+        "LICENSE"
+      ],
+      "policy": "May describe the completed study, deviations, or future work; frozen protocol and study-design documents remain immutable.",
+      "required_actions": [
+        "do not rewrite frozen documents",
+        "do not overstate unsupported governance capabilities"
+      ]
+    }
+  },
+  "ci_controls": {
+    "adult_frozen_boundary": "python scripts/verify_change_control.py",
+    "governance_regressions": "pytest",
+    "smoke_release_gate": "ml-repro --root . release-status --config configs/smoke.yml"
+  },
+  "default_class": "unclassified_change",
+  "default_policy": "Review manually; absence from the policy is not permission to alter the completed study's scientific identity or historical evidence."
+}

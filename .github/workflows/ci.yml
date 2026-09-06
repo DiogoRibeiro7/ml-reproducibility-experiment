@@ -30,6 +30,8 @@ jobs:
         run: mypy src
       - name: Tests
         run: pytest
+      - name: Verify Adult frozen boundary
+        run: python scripts/verify_change_control.py
       - name: Verify generated governance audit
         run: python scripts/render_governance_audit.py --check
       - name: Verify smoke design lock
