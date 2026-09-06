@@ -21,6 +21,10 @@ IMMUTABLE_CAPSULE_URL: Final[str] = (
     "https://github.com/DiogoRibeiro7/ml-reproducibility-experiment/"
     "releases/download/v0.7.1/adult_preregistration_capsule.json"
 )
+DESIGN_LOCK_REL: Final[str] = "artifacts/adult_design_lock.json"
+CAPSULE_REL: Final[str] = "artifacts/adult_preregistration_capsule.json"
+POLICY_REL: Final[str] = "governance/change_control_policy.json"
+LINEAGE_REL: Final[str] = "governance/lineage_contract.json"
 
 
 def _load_json(path: Path) -> dict[str, Any]:
@@ -46,6 +50,9 @@ def _sha256_bytes(payload: bytes) -> str:
 
 
 def _request(url: str, *, accept: str) -> bytes:
+    allowed_urls = {IMMUTABLE_RELEASE_API, IMMUTABLE_CAPSULE_URL}
+    if url not in allowed_urls:
+        raise ValueError(f"Refusing untrusted change-control URL: {url}")
     headers = {
         "Accept": accept,
         "User-Agent": "ml-reproducibility-change-control",
@@ -53,8 +60,8 @@ def _request(url: str, *, accept: str) -> bytes:
     token = os.environ.get("GITHUB_TOKEN")
     if token:
         headers["Authorization"] = f"Bearer {token}"
-    request = urllib.request.Request(url, headers=headers)
-    with urllib.request.urlopen(request, timeout=30) as response:  # noqa: S310
+    request = urllib.request.Request(url, headers=headers)  # noqa: S310 - allowlisted HTTPS URLs
+    with urllib.request.urlopen(request, timeout=30) as response:  # noqa: S310 - validated above
         return response.read()
 
 
@@ -115,10 +122,10 @@ def verify_against_capsule(
     immutable_ref: str,
 ) -> list[str]:
     """Verify one repository tree against an externally anchored capsule."""
-    design_lock_path = root / "artifacts" / "adult_design_lock.json"
-    local_capsule_path = root / "artifacts" / "adult_preregistration_capsule.json"
-    policy_path = root / "governance" / "change_control_policy.json"
-    lineage_path = root / "governance" / "lineage_contract.json"
+    design_lock_path = root / DESIGN_LOCK_REL
+    local_capsule_path = root / CAPSULE_REL
+    policy_path = root / POLICY_REL
+    lineage_path = root / LINEAGE_REL
 
     design_lock = _load_json(design_lock_path)
     policy = _load_json(policy_path)
@@ -128,6 +135,8 @@ def verify_against_capsule(
     anchored_design_sha = capsule.get("design_lock_sha256")
     if not isinstance(anchored_design, dict) or not isinstance(anchored_design_sha, str):
         raise ValueError("Immutable capsule is missing the frozen design identity")
+    if capsule.get("design_lock_path") != DESIGN_LOCK_REL:
+        raise ValueError("Immutable capsule design-lock path is not the expected repository path")
 
     if _sha256(local_capsule_path) != capsule_sha256:
         raise ValueError("Local preregistration capsule differs from immutable release asset")
@@ -139,6 +148,10 @@ def verify_against_capsule(
     release_identity = policy.get("current_release_identity")
     if not isinstance(release_identity, dict):
         raise TypeError("Change-control policy has no current release identity")
+    if release_identity.get("design_lock_path") != DESIGN_LOCK_REL:
+        raise ValueError("Change-control policy has the wrong design-lock artifact path")
+    if release_identity.get("preregistration_capsule_path") != CAPSULE_REL:
+        raise ValueError("Change-control policy has the wrong preregistration-capsule path")
     if release_identity.get("design_lock_sha256") != anchored_design_sha:
         raise ValueError("Change-control policy disagrees with immutable design identity")
     if release_identity.get("preregistration_capsule_sha256") != capsule_sha256:
@@ -149,6 +162,10 @@ def verify_against_capsule(
     design_identity = lineage.get("design_identity")
     if not isinstance(design_identity, dict):
         raise TypeError("Lineage contract has no design identity")
+    if design_identity.get("design_lock_path") != DESIGN_LOCK_REL:
+        raise ValueError("Lineage contract has the wrong design-lock artifact path")
+    if design_identity.get("preregistration_capsule_path") != CAPSULE_REL:
+        raise ValueError("Lineage contract has the wrong preregistration-capsule path")
     if design_identity.get("design_lock_sha256") != anchored_design_sha:
         raise ValueError("Lineage contract disagrees with immutable design identity")
     if design_identity.get("preregistration_capsule_sha256") != capsule_sha256:
