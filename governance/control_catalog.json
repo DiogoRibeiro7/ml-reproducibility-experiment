@@ -1,0 +1,181 @@
+{
+  "schema_version": 1,
+  "study": "adult",
+  "semantics": "evidence-backed governance control catalog; framework references are descriptive crosswalks, not compliance, certification, or legal conclusions",
+  "frameworks": {
+    "nist_ai_rmf_1_0": {
+      "name": "NIST AI Risk Management Framework 1.0",
+      "version": "1.0",
+      "status_note": "Published framework used for this crosswalk; NIST states that a revision is in progress.",
+      "official_source": "https://airc.nist.gov/airmf-resources/airmf/5-sec-core/"
+    },
+    "iso_iec_42001_2023": {
+      "name": "ISO/IEC 42001:2023",
+      "version": "2023",
+      "status_note": "Theme-level crosswalk only; no clause-level conformity or certification claim.",
+      "official_source": "https://www.iso.org/standard/42001"
+    },
+    "eu_ai_act_2024_1689": {
+      "name": "Regulation (EU) 2024/1689 (Artificial Intelligence Act)",
+      "version": "consolidated text checked 2026-07-27",
+      "status_note": "Illustrative crosswalk to high-risk-system governance themes only; this repository does not claim that the study is a regulated high-risk AI system or that it satisfies legal obligations.",
+      "official_source": "https://eur-lex.europa.eu/eli/reg/2024/1689/2026-07-27/eng"
+    }
+  },
+  "controls": [
+    {
+      "control_id": "DATA-01",
+      "objective": "Establish immutable source-data identity.",
+      "control_type": "preventive",
+      "status": "implemented",
+      "evidence": ["governance/lineage_contract.json", "artifacts/adult_final_experiment_lock.json"],
+      "mechanism": "UCI Adult source files are bound to DOI, source URL, and SHA-256 identities before analysis evidence is accepted.",
+      "framework_references": {
+        "nist_ai_rmf_1_0": ["GOVERN", "MAP"],
+        "iso_iec_42001_2023": ["traceability", "data governance", "risk management"],
+        "eu_ai_act_2024_1689": ["Article 10 data and data governance", "Article 11 technical documentation"]
+      },
+      "limitations": "Content identity and provenance are evidenced; data quality, representativeness, fairness, and legal-basis obligations are not certified by this control."
+    },
+    {
+      "control_id": "DATA-02",
+      "objective": "Preserve acquisition provenance and require preregistration before primary-data retrieval.",
+      "control_type": "preventive",
+      "status": "implemented",
+      "evidence": ["artifacts/adult_external_anchor.json", "artifacts/adult_preregistration_capsule.json", "docs/GOVERNANCE.md"],
+      "mechanism": "Acquisition is tied to a verified externally anchored preregistration capsule and source hashes.",
+      "framework_references": {
+        "nist_ai_rmf_1_0": ["GOVERN", "MAP"],
+        "iso_iec_42001_2023": ["accountability", "traceability", "risk management"],
+        "eu_ai_act_2024_1689": ["Article 10 data and data governance", "Article 11 technical documentation"]
+      },
+      "limitations": "This demonstrates study provenance, not enterprise data-access approval, retention, consent, or privacy governance."
+    },
+    {
+      "control_id": "PART-01",
+      "objective": "Govern train/test partition specification and usage.",
+      "control_type": "detective",
+      "status": "implemented",
+      "evidence": ["governance/partition_contract.json", "tests/test_partition_governance.py", "docs/PARTITION_GOVERNANCE.md"],
+      "mechanism": "The deterministic split procedure, seed range, sizes, experiment usage, and baseline partition-spec identity are independently checked against all committed fits.",
+      "framework_references": {
+        "nist_ai_rmf_1_0": ["MAP", "MEASURE"],
+        "iso_iec_42001_2023": ["data quality", "traceability", "risk assessment"],
+        "eu_ai_act_2024_1689": ["Article 10 data and data governance", "Article 11 technical documentation"]
+      },
+      "limitations": "No separately governed validation set or prospectively persisted row-membership digest exists."
+    },
+    {
+      "control_id": "DESIGN-01",
+      "objective": "Freeze the scientific specification before primary-data access.",
+      "control_type": "preventive",
+      "status": "implemented",
+      "evidence": ["artifacts/adult_design_lock.json", "artifacts/adult_preregistration_capsule.json", "ROADMAP.md"],
+      "mechanism": "Configuration, protocol, study design, runtime policy, package lock, project metadata, and scientific source files are cryptographically frozen.",
+      "framework_references": {
+        "nist_ai_rmf_1_0": ["GOVERN", "MAP", "MANAGE"],
+        "iso_iec_42001_2023": ["policies and objectives", "risk management", "change management"],
+        "eu_ai_act_2024_1689": ["Article 11 technical documentation"]
+      },
+      "limitations": "A scientific design lock is not an enterprise approval workflow or segregation-of-duties control."
+    },
+    {
+      "control_id": "DESIGN-02",
+      "objective": "Anchor the preregistered scientific identity outside the mutable working tree.",
+      "control_type": "preventive",
+      "status": "implemented",
+      "evidence": ["artifacts/adult_external_anchor.json", "docs/CHANGE_CONTROL.md"],
+      "mechanism": "The preregistration capsule is tied to immutable GitHub release v0.7.1 and verified before protected execution paths.",
+      "framework_references": {
+        "nist_ai_rmf_1_0": ["GOVERN", "MANAGE"],
+        "iso_iec_42001_2023": ["accountability", "traceability", "change management"],
+        "eu_ai_act_2024_1689": ["Article 11 technical documentation", "Article 12 record-keeping"]
+      },
+      "limitations": "One external hosting platform remains a trust dependency; a second independently controlled anchor is still desirable."
+    },
+    {
+      "control_id": "EXEC-01",
+      "objective": "Record and constrain the reference execution environment.",
+      "control_type": "preventive_and_detective",
+      "status": "implemented",
+      "evidence": ["environment/runtime-policy.json", "environment/requirements.lock.txt", "results/adult/split_sensitivity.manifest.json"],
+      "mechanism": "Python, package versions, platform details, thread limits, and environment identity are recorded and checked as part of the study evidence.",
+      "framework_references": {
+        "nist_ai_rmf_1_0": ["MEASURE", "MANAGE"],
+        "iso_iec_42001_2023": ["system reliability", "traceability", "monitoring"],
+        "eu_ai_act_2024_1689": ["Article 11 technical documentation", "Annex IV technical information"]
+      },
+      "limitations": "Bit-identical continuous-score hashes may remain platform-sensitive across BLAS/hardware boundaries."
+    },
+    {
+      "control_id": "LINEAGE-01",
+      "objective": "Provide deterministic executed-fit lineage.",
+      "control_type": "detective",
+      "status": "implemented",
+      "evidence": ["governance/model_lineage_contract.json", "scripts/render_model_lineage.py", "tests/test_model_lineage.py"],
+      "mechanism": "Each of 636 fits is assigned deterministic identities linking partition, preprocessing, model specification, training specification, execution context, and committed result evidence.",
+      "framework_references": {
+        "nist_ai_rmf_1_0": ["GOVERN", "MEASURE", "MANAGE"],
+        "iso_iec_42001_2023": ["traceability", "transparency", "reliability"],
+        "eu_ai_act_2024_1689": ["Article 11 technical documentation", "Article 12 record-keeping"]
+      },
+      "limitations": "The repository stores executed-fit evidence, not trained estimator binaries, production aliases, approval states, or deployment endpoints."
+    },
+    {
+      "control_id": "RESULT-01",
+      "objective": "Bind result evidence to behavioural and metric signatures.",
+      "control_type": "detective",
+      "status": "implemented",
+      "evidence": ["governance/model_lineage_contract.json", "results/adult/primary_release_manifest.json"],
+      "mechanism": "Per-fit metrics, convergence diagnostics, prediction SHA-256, and score SHA-256 signatures are retained and included in lineage/release evidence.",
+      "framework_references": {
+        "nist_ai_rmf_1_0": ["MEASURE", "MANAGE"],
+        "iso_iec_42001_2023": ["performance monitoring", "traceability", "reliability"],
+        "eu_ai_act_2024_1689": ["Article 11 technical documentation", "Article 12 record-keeping"]
+      },
+      "limitations": "These are experiment outputs, not production monitoring logs or post-deployment incident records."
+    },
+    {
+      "control_id": "ASSURE-01",
+      "objective": "Independently reconstruct configured fits before release authorisation.",
+      "control_type": "detective",
+      "status": "implemented",
+      "evidence": ["artifacts/adult_release_status.json", "RELEASE_VALIDATION.md", "governance/audit_report.md"],
+      "mechanism": "The release gate independently rebuilds every configured fit and checks metrics and behavioural signatures instead of trusting artifact-to-artifact consistency.",
+      "framework_references": {
+        "nist_ai_rmf_1_0": ["MEASURE", "MANAGE"],
+        "iso_iec_42001_2023": ["assurance", "monitoring", "continual improvement"],
+        "eu_ai_act_2024_1689": ["Article 11 technical documentation"]
+      },
+      "limitations": "This is scientific release assurance, not an independent conformity assessment, audit opinion, or regulatory certification."
+    },
+    {
+      "control_id": "CHANGE-01",
+      "objective": "Prevent in-place redefinition of the completed scientific release.",
+      "control_type": "preventive",
+      "status": "implemented",
+      "evidence": ["governance/change_control_policy.json", "scripts/verify_change_control.py", "tests/test_change_control.py", ".github/workflows/ci.yml"],
+      "mechanism": "CI verifies the protected scientific tree against the externally immutable v0.7.1 preregistration capsule and rejects drift, local lock rewriting, identity-path divergence, and path escapes.",
+      "framework_references": {
+        "nist_ai_rmf_1_0": ["GOVERN", "MANAGE"],
+        "iso_iec_42001_2023": ["change management", "accountability", "continual improvement"],
+        "eu_ai_act_2024_1689": ["Article 11 technical documentation", "Article 12 record-keeping"]
+      },
+      "limitations": "This repository control does not replace organizational change advisory boards, access controls, or formal approval authorities."
+    },
+    {
+      "control_id": "SCOPE-01",
+      "objective": "Prevent governance overclaiming.",
+      "control_type": "preventive",
+      "status": "implemented",
+      "evidence": ["docs/GOVERNANCE.md", "governance/lineage_contract.json", "governance/model_lineage_contract.json"],
+      "mechanism": "Explicit negative capability statements distinguish study governance evidence from production registry, RBAC, privacy-retention, deployment-lineage, validation-registry, and certification claims.",
+      "framework_references": {
+        "nist_ai_rmf_1_0": ["GOVERN", "MAP"],
+        "iso_iec_42001_2023": ["transparency", "accountability"],
+        "eu_ai_act_2024_1689": ["Article 11 technical documentation"]
+      },
+      "limitations": "The crosswalk itself is descriptive and must not be presented as proof of compliance with any framework or law."
+    }
+  ]
+}
